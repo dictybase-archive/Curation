@@ -1,0 +1,30 @@
+page:
+    header : page-header.tt
+    footer : page-footer.tt
+
+gbrowse:
+    tracks:
+        - Gene
+        - Predictions
+        - Repredictions
+        - tRNA
+        - ncRNA
+        - ESTs
+    padding: 1000
+    
+fasta:
+    - type   : mRNA
+      source : Sequencing Center
+      style  : FGCOLOR red
+      subfeature : CDS
+    - type   : mRNA
+      source : geneID reprediction
+      style  : FGCOLOR blue
+      subfeature : CDS
+    - type   : EST
+      style  : Text-decoration: underline
+
+organism:
+    discoideum: 
+        prefix : DDB
+        site_name : dictyBase

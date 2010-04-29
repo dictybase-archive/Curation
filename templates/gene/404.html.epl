@@ -1,0 +1,5 @@
+% my ($self, $c) = @_;
+% $self->stash(layout => 'default');
+<div class="error-warning">
+    %= $self->stash('message');
+</div>

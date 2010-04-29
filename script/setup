@@ -1,0 +1,42 @@
+#!/usr/bin/perl 
+
+use strict;
+use YAML;
+use DBI;
+use Getopt::Long;
+use File::Spec::Functions;
+
+my ( $help, $filename);
+
+GetOptions(
+    'h|help'    => \$help,
+    'd|database=s' => \$filename,
+);
+pod2usage( -verbose => 2 ) if $help;
+die 'no database filename provided' if !$filename;
+
+my $dbdir = catdir('db');
+die "cannot open folder $dbdir:$!" if ( !-e $dbdir );
+
+my $dbfile = catfile( $dbdir, $filename );
+    unlink $dbfile if ( -e $dbfile );
+
+my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbfile", '', '' );
+$dbh->{AutoCommit} = 1;
+
+my $create_sql = qq{
+    CREATE TABLE users (
+            id integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+            name char(10) NOT NULL,
+            password char(6) NOT NULL,
+            initials char(2) NOT NULL
+    );
+};
+
+$dbh->do($create_sql) or die "DBI::str for $create_sql";
+
+my $user_insert_sql = 'INSERT INTO users (name, password, initials) values (?,?,?);';
+my $sth = $dbh->prepare($user_insert_sql);
+$sth->execute('PFEY', 'PFEY12345', 'PF');
+$sth->execute('PGAUDET', 'PGAUDET12345', 'PG');
+$sth->execute('BDODSON', 'BDODSON12345', 'BD');
