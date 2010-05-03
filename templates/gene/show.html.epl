@@ -1,158 +1,148 @@
 % my ($self, $c) = @_;
 % $self->stash(layout => 'default');
 
-<!-- Sam Skin CSS for TabView -->
-<link rel="stylesheet" type="text/css" href="/static/curation/js/yui/build/tabview/assets/skins/sam/tabview.css">
-<link rel="stylesheet" type="text/css" href="/static/curation/js/yui/build/container/assets/skins/sam/container.css">
-<link rel="stylesheet" type="text/css" href="/static/curation/css/body.css">
-
-<!-- Source file for TabView -->
-<script src="/static/curation/js/yui/build/tabview/tabview-min.js"></script>
-<script src="/static/dictytools/js/yui/build/connection/connection-min.js"></script>
-
-<!-- OPTIONAL: Drag & Drop (only required if enabling Drag & Drop) -->
-<script src="/static/dictytools/js/yui/build/dragdrop/dragdrop-min.js"></script>
- 
-<!-- Source file -->
-<script src="/static/dictytools/js/yui/build/container/container-min.js"></script>
-
-
-<div class="page-header">
-<%= $self->stash('id') %>
-</div>
-<div style="padding-left: 10px; padding-right: 10px;">
-    <div id="container" class="yui-navset">
-        <ul class="yui-nav">
-            <li class="selected"><a href="#gbrowse"><em>GBrowse</em></a></li>
-            <li><a href="#blink"><em>Blink</em></a></li>
-            <li><a href="#tab3"><em>Curation</em></a></li>
-        </ul>            
-        <div class="yui-content">
-            <div>
+<div id="container-gene" class="yui-navset">
+    <ul class="yui-nav">
+        <li class="selected"><a href="#gbrowse"><em>GBrowse</em></a></li>
+        <li><a href="#blink"><em>Blink</em></a></li>
+        <li><a href="#tab3"><em>Curation</em></a></li>
+    </ul>            
+    <div class="yui-content">
+        <div>
+            <table class="content-table">
+                <tr>
+                    <td>
+                        <pre style="text-align:left;"><%= $self->stash('fasta')%></pre>
+                    <!--    
+                        <div id="panel1">
+	                        <div class="hd">Panel #1 </div>
+	                        <div class="bd"><pre style="text-align:left;"><%= $self->stash('fasta')%></pre></div>
+	                        <div class="ft">End of Panel #1</div>
+                        </div>
+                    -->
+                    </td>   
+                    
+                    <td class="title">
+                        <%= $self->stash('gbrowse')%> <br/>
+                        <pre>
+                            <%= $self->stash('interpro')%>
+                        </pre>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div>
+            <%= $self->stash('blink');%>
+        </div>
+        <div>
+            <form id="curation-form">
+                <table class="content-table">
+                    <tr>
+                        <td class="title">Derived from</td>
+                        <td class="title">Supported by</td>
+                        <td class="title">Notes</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <ul>
+                                <li>
+                                    <input id="derived-from-gp" disabled="true" type="checkbox" checked="checked" value="T"/>
+                                    <label for="derived-from-gp">Gene prediction</label>
+                                </li>
+                                <li>
+                                    <input id="derived-from-gs" disabled="true" type="checkbox" value="T"/>
+                                    <label for="derived-from-gs">Gene sequence</label>
+                                </li>
+                                <li>
+                                    <input id="derived-from-ci" disabled="true" type="checkbox" value="T"/>
+                                    <label for="derived-from-ci">Curator inference</label>
+                                </li>
+                            </ul>
+                        </td>
+                        <td>
+                            <ul>
+                                <li>
+                                  <input id="supported-by-est" type="checkbox" checked="checked" value="T"/>
+                                  <label for="supported-by-est">EST</label>
+                                </li>
+                                <li>
+                                    <input id="supported-by-ss" type="checkbox" value="T"/>
+                                    <label for="supported-by-ss">Sequence similarity</label>
+                                </li>
+                                <li>
+                                    <input id="supported-by-gc" type="checkbox" value="T"/>
+                                    <label for="supported-by-gc">Genomic context</label>
+                                </li>
+                                <li>
+                                    <input id="supported-by-uts" type="checkbox" value="T"/>  
+                                    <label for="supported-by-uts">Unpublished transcript sequence</label>
+                                </li>
+                            </ul>
+                        </td>
+                        <td>
+                            <ul>
+                                <li>
+                                    <input id="incomplete-support" type="checkbox" value="T"/>
+                                    <label for="incomplete-support">Incomplete support</label>
+                                </li>
+                                <li>
+                                    <input id="conflicting-evidence" type="checkbox" value="T"/>
+                                    <label for="conflicting-evidence">Conflicting evidence</label>
+                                </li>
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr><th  colspan="3">
+                        <span id="curation-approve"/></span>
+                    </th></tr>
+                </table>
+                <!--
                 <table class="content-table">
                     <tr>
                         <td class="title">
-                            <%= $self->stash('gbrowse')%> 
+                            Derived from
+                        </td>
+                        <td>                         
+                            <label for="derived-from-gp">Gene prediction</label>
+                            <input id="derived-from-gp" disabled="true" type="checkbox" checked="checked" value="T"/>
+                            <label for="derived-from-gs">Gene sequence</label>
+                            <input id="derived-from-gs" disabled="true" type="checkbox" value="T"/>
+                            <label for="derived-from-ci">Curator inference</label>
+                            <input id="derived-from-ci" disabled="true" type="checkbox" value="T"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="title">
+                            Supported by
                         </td>
                         <td>
-                            <pre><%= $self->stash('fasta')%></pre>
-                        </td>   
+                            <label for="supported-by-est">EST</label>
+                            <input id="supported-by-est" type="checkbox" checked="checked" value="T"/>
+                            <label for="supported-by-ss">Sequence similarity</label>
+                            <input id="supported-by-ss" type="checkbox" value="T"/>
+                            <label for="supported-by-gc">Genomic context</label>
+                            <input id="supported-by-gc" type="checkbox" value="T"/>
+                            <label for="supported-by-uts">Unpublished transcript sequence</label>
+                            <input id="supported-by-uts" type="checkbox" value="T"/>                                
+                        </td>
                     </tr>
-                </table>
-            </div>
-            <div>
-                <%= $self->stash('blink');%>
-            </div>
-            <div>
-                <form id="curation-form">
-                    <table class="content-table">
-                        <tr>
-                            <td class="title">Derived from</td>
-                            <td class="title">Supported by</td>
-                            <td class="title">Notes</td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <ul>
-                                    <li>
-                                        <input id="derived-from-gp" disabled="true" type="checkbox" checked="checked" value="T"/>
-                                        <label for="derived-from-gp">Gene prediction</label>
-                                    </li>
-                                    <li>
-                                        <input id="derived-from-gs" disabled="true" type="checkbox" value="T"/>
-                                        <label for="derived-from-gs">Gene sequence</label>
-                                    </li>
-                                    <li>
-                                        <input id="derived-from-ci" disabled="true" type="checkbox" value="T"/>
-                                        <label for="derived-from-ci">Curator inference</label>
-                                    </li>
-                                </ul>
-                            </td>
-                            <td>
-                                <ul>
-                                    <li>
-                                      <input id="supported-by-est" type="checkbox" checked="checked" value="T"/>
-                                      <label for="supported-by-est">EST</label>
-                                    </li>
-                                    <li>
-                                        <input id="supported-by-ss" type="checkbox" value="T"/>
-                                        <label for="supported-by-ss">Sequence similarity</label>
-                                    </li>
-                                    <li>
-                                        <input id="supported-by-gc" type="checkbox" value="T"/>
-                                        <label for="supported-by-gc">Genomic context</label>
-                                    </li>
-                                    <li>
-                                        <input id="supported-by-uts" type="checkbox" value="T"/>  
-                                        <label for="supported-by-uts">Unpublished transcript sequence</label>
-                                    </li>
-                                </ul>
-                            </td>
-                            <td>
-                                <ul>
-                                    <li>
-                                        <input id="incomplete-support" type="checkbox" value="T"/>
-                                        <label for="incomplete-support">Incomplete support</label>
-                                    </li>
-                                    <li>
-                                        <input id="conflicting-evidence" type="checkbox" value="T"/>
-                                        <label for="conflicting-evidence">Conflicting evidence</label>
-                                    </li>
-                                </ul>
-                            </td>
-                        </tr>
-                        <tr><th  colspan="3">
-                            <span id="curation-approve"/></span>
-                        </th></tr>
-                    </table>
-                    <!--
-                    <table class="content-table">
-                        <tr>
-                            <td class="title">
-                                Derived from
-                            </td>
-                            <td>                         
-                                <label for="derived-from-gp">Gene prediction</label>
-                                <input id="derived-from-gp" disabled="true" type="checkbox" checked="checked" value="T"/>
-                                <label for="derived-from-gs">Gene sequence</label>
-                                <input id="derived-from-gs" disabled="true" type="checkbox" value="T"/>
-                                <label for="derived-from-ci">Curator inference</label>
-                                <input id="derived-from-ci" disabled="true" type="checkbox" value="T"/>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="title">
-                                Supported by
-                            </td>
-                            <td>
-                                <label for="supported-by-est">EST</label>
-                                <input id="supported-by-est" type="checkbox" checked="checked" value="T"/>
-                                <label for="supported-by-ss">Sequence similarity</label>
-                                <input id="supported-by-ss" type="checkbox" value="T"/>
-                                <label for="supported-by-gc">Genomic context</label>
-                                <input id="supported-by-gc" type="checkbox" value="T"/>
-                                <label for="supported-by-uts">Unpublished transcript sequence</label>
-                                <input id="supported-by-uts" type="checkbox" value="T"/>                                
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="title">
-                                Notes
-                            </td>
-                            <td>
-                                <label for="incomplete-support">Incomplete support</label>
-                                <input id="incomplete-support" type="checkbox" value="T"/>
-                                <label for="conflicting-evidence">Conflicting evidence</label>
-                                <input id="conflicting-evidence" type="checkbox" value="T"/>
-                            </td>
-                        </tr>
-                        <tr><th  colspan="2">
-                            <span id="curation-approve"/></span>
-                        </th></tr>
-                    </table>   
-                    -->                                             
-                </form>
-            </div>
+                    <tr>
+                        <td class="title">
+                            Notes
+                        </td>
+                        <td>
+                            <label for="incomplete-support">Incomplete support</label>
+                            <input id="incomplete-support" type="checkbox" value="T"/>
+                            <label for="conflicting-evidence">Conflicting evidence</label>
+                            <input id="conflicting-evidence" type="checkbox" value="T"/>
+                        </td>
+                    </tr>
+                    <tr><th  colspan="2">
+                        <span id="curation-approve"/></span>
+                    </th></tr>
+                </table>   
+                -->                                             
+            </form>
         </div>
     </div>
 </div>
@@ -160,5 +150,7 @@
 <script>
     var myTabs = new YAHOO.widget.TabView("container");   
     YAHOO.util.Event.onDOMReady(function(){ init("<%= $self->stash('id') %>") });
+//    YAHOO.example.container.panel1 = new YAHOO.widget.Panel("panel1", { width:"320px", visible:false, constraintoviewport:true } ); 
+//	YAHOO.example.container.panel1.render(); 
 </script>
 
