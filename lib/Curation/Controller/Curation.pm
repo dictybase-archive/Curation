@@ -4,13 +4,13 @@ use warnings;
 use strict;
 
 # Other modules:
-use base 'Curation::Controller';
+use base 'Mojolicious::Controller';
 
 # Module implementation
 #
 sub index {
     my ($self, $c) = @_;
-    #$self->redirect_to('/curation/genes');
+    $self->redirect_to('/curation/genes');
 }
 
 1;

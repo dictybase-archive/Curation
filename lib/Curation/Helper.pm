@@ -10,17 +10,20 @@ use version; our $VERSION = qv('1.0.0');
 __PACKAGE__->attr('app');
 
 sub search_feature {
-    my ( $self, $id, $c ) = @_;
+    my ( $self, $id ) = @_;
+
+    my @dbxref = Chado::Dbxref->search( { accession => $id } );
+    return if !@dbxref;
 
     my @features =
         map { Chado::Feature->search( { dbxref_id => $_->dbxref_id } ) }
-        Chado::Dbxref->search( { accession => $id } );
+        @dbxref;
 
     return @features;
 }
 
 sub reference_feature {
-    my ( $self, $feature, $c ) = @_;
+    my ( $self, $feature ) = @_;
 
     my $floc = Chado::Featureloc->get_single_row(
         { feature_id => $feature->feature_id } );
@@ -33,7 +36,7 @@ sub reference_feature {
 }
 
 sub start {
-    my ( $self, $feature, $c ) = @_;
+    my ( $self, $feature ) = @_;
 
     my $floc = Chado::Featureloc->get_single_row(
         { feature_id => $feature->feature_id } );
@@ -43,7 +46,7 @@ sub start {
 }
 
 sub end {
-    my ( $self, $feature, $c ) = @_;
+    my ( $self, $feature ) = @_;
 
     my $floc = Chado::Featureloc->get_single_row(
         { feature_id => $feature->feature_id } );
@@ -53,7 +56,7 @@ sub end {
 }
 
 sub organism {
-    my ( $self, $feature, $c ) = @_;
+    my ( $self, $feature ) = @_;
 
     my $organism = Chado::Organism->get_single_row(
         { organism_id => $feature->organism_id } );
@@ -62,7 +65,7 @@ sub organism {
 }
 
 sub id {
-    my ( $self, $feature, $c ) = @_;
+    my ( $self, $feature ) = @_;
 
     my $id =
         Chado::Dbxref->get_single_row( { dbxref_id => $feature->dbxref_id } )
@@ -187,6 +190,28 @@ sub is_flipped {
     return 0;
 }
 
-
-
+sub protein {
+    return qq{>DDB0185055|DDB_G0277399 |Protein|gene: piaA on chromosome: 2 position 8027686 to 8031387
+MTSSDSSVNTTSSSFGNISISSPNHSSSTPPLNNGNGNNVSASETELKKHVLYSLQCLDE
+KTLTLKVKLDHLNKLVELKKSIPDLNKLGISPTQLYKSVRPFIALPPKTIRTAGLRVMRY
+YLSNSNNVKELLDLKVQYFITRSLERDKHSEPERIQALKIIRTIMEIDCSLMPHCFVKGL
+VSIAENQEDNFCRVCLECLTEISIRNPQISSHCGGIRTVFDAVLDPFYQGIQESLLICIL
+YLLSDKDTRIYIRPKSDLEIILAPLTNSFNIGVKLKGASKEKEKEKEKEDEVAMKKWTAS
+SKAVLTLIKSWIGIISLNSDDQGLKSVVDTLRMPQIELQEKALDSIFEIFRVQLPKSIQE
+TFGPQKATQTFNFGSETLQDLPSRTRSLRHNLLNNYLSVLLIAFIDNGLIEGLVYLGNYV
+ANRDGMSEQEKECSKNISLKSTVLLAELLHMSNALLPPSQCAKLQTLPSLVNSAISFRLD
+PRLRSSSNTMVTNLHSYSHNKSSTTLMDSTLAIGLTGANKWRRIKGQDRRLDKVDDVKMK
+MEWHMDDNQFQQKIKDTQVLVTKDYQKWSWELMFELLEGPLNNPQHLSNTLKTKFIKRIL
+SFLRPNKKLFSTMAWTTENLKYVRTACVALEVLISHEIGFDFLKDNKTIIQIADMLKVEL
+DYNIKPPPSSSSSSENKKDNVRLLNPEKVLKTMSREYFTMLGTLSSNLLGLEILARNNIF
+DYIKPLAELPGRDDLSHLIMTSLDYNVNGASRTILQKILTSSSRVVRYLATKYLRFLLRS
+GVQDFSNWGVELLVQQLNDVDAKVSALSLNVLDEACDDPSCLEVLIDLKPNLLKLGKPGK
+SLLLRFLSSPKGLENLLQNNGFVEQEEQLWITSENATYVNAIESAVSESLSPSVWRFKEA
+PDGSSTSGVYLPPHFFGELAKTEKGCQLIRKSNNYQRFLKIIQDPTAKQLDKRASLIAIG
+HIGSSVDGYSFVKESDTIKLLIGIAEKSQCLALRSTCFYALGMISCIEEAQPIFNSFGWE
+SPSDLNSRILLPKDLKNSTFLSVPQYQYQGSWADHSFETLPSNHFSDPIKNEIISFVGNL
+SSHITAEGASKNLKRLKIKYPDHFATSEILNAVFILLNTFKYRLGARRFIYDLFDVAIFS
+SDPYHDLN*
+}
+}
 1;

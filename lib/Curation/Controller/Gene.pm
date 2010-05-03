@@ -7,42 +7,45 @@ use Bio::Perl;
 use Chado::AutoDBI;
 use dicty::DB::AutoDBI;
 use POSIX qw/strftime/;
+use SOAP::Lite;
 
 # Other modules:
-use base 'Curation::Controller';
+use base 'Mojolicious::Controller';
 
+__PACKAGE__->attr('soap');
 
 # Module implementation
 #
 sub index {
-    my ( $self, $c ) = @_;
+    my ( $self ) = @_;
 }
 
 sub show {
-    my ( $self, $c ) = @_;
+    my ($self) = @_;
     my $helper = $self->app->helper;
 
-    my $id = $c->stash('id');
+    my $id = $self->stash('id');
 
     my @features = $helper->search_feature($id);
-    $self->exception( 'gene not found: ' . $id, $c ) if !@features;
-    $self->exception( 'more than one gene returned: ' . $id, $c )
-        if @features > 1;
+
+    $self->exception( 'gene not found: ' . $id ) if !@features;
+    $self->app->log->debug(@features);
+    $self->exception( 'more than one gene returned: ' . $id) if @features > 1;
 
     my $gene = $features[0];
 
     $self->render(
         template => 'gene/show',
-        gbrowse  => $self->gbrowse_link( $gene, $c ),
-        blink    => $self->blink_link( $gene, $c ),
-        fasta    => $self->fasta( $gene, $c ),
-        #curation => $self->curation( $gene, $c ),
+        gbrowse  => $self->gbrowse($gene),
+        blink    => $self->blink($gene),
+        fasta    => $self->fasta($gene),
+        interpro => $self->interpro($gene)
     );
 }
 
 sub exception {
-    my ( $self, $message, $c ) = @_;
-    $c->res->code(404);
+    my ( $self, $message ) = @_;
+    $self->res->code(404);
     $self->render(
         template => 'gene/404',
         message  => $message,
@@ -51,14 +54,15 @@ sub exception {
     );
 }
 
-sub gbrowse_link {
-    my ( $self, $feature, $c ) = @_;
+## --- Display part
+sub gbrowse {
+    my ( $self, $feature ) = @_;
 
     my $helper = $self->app->helper;
 
     my $id                = $helper->id($feature);
     my $reference_feature = $helper->reference_feature($feature);
-    $self->exception( 'source_feature not found: ' . $id, $c )
+    $self->exception( 'source_feature not found: ' . $id )
         if !$reference_feature;
 
     my $frame = $self->frame($feature);
@@ -87,8 +91,8 @@ sub gbrowse_link {
     return $gbrowse;
 }
 
-sub blink_link {
-    my ( $self, $feature, $c ) = @_;
+sub blink {
+    my ( $self, $feature ) = @_;
 
     my $helper = $self->app->helper;
     my @links;
@@ -110,7 +114,7 @@ sub blink_link {
 }
 
 sub fasta {
-    my ( $self, $feature, $c ) = @_;
+    my ( $self, $feature ) = @_;
 
     return if !$self->app->config->{fasta};
 
@@ -137,7 +141,7 @@ sub fasta {
 
     ## store relative start and stop positions for each type defined in config
     my @coordinates;
-    my $schema;
+    my $schema = '';
     my @schema_coordinates;
     
     foreach my $fasta ( @{ $self->app->config->{fasta} } ) {
@@ -204,7 +208,7 @@ sub fasta {
 }
 
 sub frame {
-    my ( $self, $feature, $c ) = @_;
+    my ( $self, $feature ) = @_;
 
     my $helper = $self->app->helper;
 
@@ -243,14 +247,142 @@ sub frame_coordinates {
 
 }
 
+sub interpro {
+    my ( $self, $feature ) = @_;
+    
+    my $output = '';
+    
+    my $config = $self->app->config->{interpro};
+    my $helper = $self->app->helper;
+    
+    my $soap = SOAP::Lite->service($config->{wdsl});
+    $soap->proxy( $config->{proxy}, timeout => $config->{timeout} );
+    $soap->on_fault(
+        sub {
+            my ( $soap, $res ) = @_;
+            # Throw an exception for all faults
+            $self->app->log->error($res) if ref($res) eq '';
+            $self->app->log->error( $res->faultstring );
+            return new SOAP::SOM;
+        }
+    );
+    $self->soap($soap);
+    
+    my $params = {    # Parameters to pass to service
+        'app'       => join(' ', @{$config->{apps}}),
+        'seqtype'   => 'p',
+        'async'     => 1,    # Use InterproScan in async mode, simulate sync mode in client
+        'email'     => 'y-bushmanova@northwestern.edu'
+    };
+
+    my $async = 1;
+    
+    my $reference_feature  = $helper->reference_feature($feature);
+    my @features =
+        $helper->splice_features( $reference_feature, $helper->start($feature) - 1,
+        $helper->end($feature) );
+    
+    foreach my $feature ( @{ $self->app->config->{interpro}->{features} } ) {
+        my $type = $feature->{type};
+        my $source = $feature->{source} || undef;
+        
+        my @features = $helper->filter_by_type( \@features, $type );
+        @features = $helper->filter_by_source( \@features, $source )
+            if $source;
+        
+        my @proteins = map { $helper->protein($_) } @features;
+        return 'No protein data available' if !@proteins;
+        
+        foreach my $protein (@proteins){
+            my $contents = [ { type => 'sequence', content => $protein } ];
+            my $job_id = $self->submit_job( $contents, $params, $async );
+            $self->app->log->error('Error submitting job') if !$job_id;
+            
+            $output .= '<span class=interpro pending>' . $job_id . '</span><br/>';
+        }
+    }
+    return $output;
+#    $self->client_poll($job_id);
+#    my $results = $self->get_results($job_id);
+#    return $self->format_results($results);
+}
+
+sub submit_job {
+    my ($self, $contents, $params, $async ) = @_;
+    
+    my $soap = $self->soap;
+    my $job_id;
+
+    # Check application list is right format
+    if ( defined( $params->{'app'} ) ) {
+        $params->{'app'} =~ s/,/ /g;     # Change commas to spaces for service
+        $params->{'app'} =~ s/ +/ /g;    # Squash spaces
+    }
+
+    # Submit the job
+    my $params_data = SOAP::Data->name('params')->type( map => $params );
+    my $content_data = SOAP::Data->name('content')->value($contents);
+
+    # For SOAP::Lite 0.60 and earlier parameters are passed directly
+    if ( $SOAP::Lite::VERSION eq '0.60' || $SOAP::Lite::VERSION =~ /0\.[1-5]/ ) {
+        $job_id = $soap->runInterProScan( $params_data, $content_data );
+    }
+
+    # For SOAP::Lite 0.69 and later parameter handling is different, so pass
+    # undef's for templated params, and then pass the formatted args.
+    else {
+        $job_id =
+            $soap->runInterProScan( undef, undef, $params_data,
+            $content_data );
+    }
+    $self->app->log->debug("job started: $job_id");
+    return $job_id;
+}
+
+sub client_poll {
+    my ( $self, $job_id ) = @_;
+    my $completed = 0;
+    
+    while ( $completed ne 1 ) {
+        my $status = $self->soap->checkStatus($job_id);
+        $completed++ if $status !~ m{running|pending}i;
+        sleep $self->app->config->{interpro}->{check_interval};
+    }
+}
+
+sub get_results {
+    my ( $self, $job_id ) = @_;
+    my $result;
+    my $result_types = $self->soap->getResults($job_id);
+    my $outformat    = 'txt';
+    foreach my $type (@$result_types) {
+        next
+            if $type->{ext} !~ m{$outformat}
+                && $type->{type} !~ m{$outformat};
+
+        $result = $self->soap->poll( $job_id, $type->{type} );
+        next if !$result;
+    }
+
+    $self->app->log->debug("retrieved results: $job_id") if $result;
+
+    return $result;
+}
+
+sub format_results {
+    my ( $self, $results ) = @_;
+    return $results;
+}
+
+## --- Curation part
 sub update {
-    my ( $self, $c ) = @_;
+    my ($self) = @_;
 
     my $dbh    = $self->app->dbh;
     my $helper = $self->app->helper;
 
-    my $id               = $c->stash('id');
-    my $curator_initials = 'YB';
+    my $id               = $self->stash('id');
+    my $curator_initials = $self->session('initials');
 
     my @derived;
     push @derived, 'Gene prediction'
@@ -276,8 +408,8 @@ sub update {
     my $mrna_cvterm    = $self->get_cvterm( 'sequence',     'mRNA' );
 
     my @features = $helper->search_feature($id);
-    $self->exception( 'gene not found: ' . $id, $c ) if !@features;
-    $self->exception( 'more than one gene returned: ' . $id, $c )
+    $self->exception( 'gene not found: ' . $id ) if !@features;
+    $self->exception( 'more than one gene returned: ' . $id )
         if @features > 1;
 
     my $gene = $features[0];

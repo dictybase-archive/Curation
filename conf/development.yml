@@ -2,9 +2,17 @@ page:
     header : page-header.tt
     footer : page-footer.tt
 
+database : curation.db
+
+organism:
+    discoideum: 
+        prefix : DDB
+        site_name : dictyBase
+
 gbrowse:
     tracks:
         - Gene
+        - dictyBase
         - Predictions
         - Repredictions
         - tRNA
@@ -21,10 +29,36 @@ fasta:
       source : geneID reprediction
       style  : FGCOLOR blue
       subfeature : CDS
+    - type   : mRNA
+      source : dictyBase Curator
+      style  : BGCOLOR yellow
+      subfeature : CDS
     - type   : EST
       style  : Text-decoration: underline
 
-organism:
-    discoideum: 
-        prefix : DDB
-        site_name : dictyBase
+interpro:
+    wdsl : http://www.ebi.ac.uk/Tools/webservices/wsdl/WSInterProScan.wsdl
+    timeout: 600
+    proxy : http://localhost/
+    check_interval : 15
+    features:
+        - type   : mRNA
+          source : Sequencing Center
+        - type   : mRNA
+          source : geneID reprediction        
+    apps :
+        - blastprodom
+        - fprintscan
+        - gene3d
+        - hamap
+        - hmmpanther
+        - hmmpfam
+        - hmmpir
+        - hmmsmart
+        - hmmtigr
+        - patternscan
+        - profilescan
+        - signalp
+        - superfamily
+        - tmhmm
+    
