@@ -24,105 +24,98 @@ sub show {
     my ($self) = @_;
     my $helper = $self->app->helper;
 
-    my $id = $self->stash('id');
+    my $gene = $self->get_gene( $self->stash('id') );
+    
+    my $params;
+    $params->{ $_ } = 1 foreach keys %{$self->app->config->{content}};
 
-    my @features = $helper->search_feature($id);
-
-    $self->exception( 'gene not found: ' . $id ) if !@features;
-    $self->app->log->debug(@features);
-    $self->exception( 'more than one gene returned: ' . $id) if @features > 1;
-
-    my $gene = $features[0];
-
-    $self->render(
-        template => 'gene/show',
-        gbrowse  => $self->gbrowse($gene),
-        blink    => $self->blink($gene),
-        fasta    => $self->fasta($gene),
-        interpro => $self->interpro($gene)
-    );
-}
-
-sub exception {
-    my ( $self, $message ) = @_;
-    $self->res->code(404);
-    $self->render(
-        template => 'gene/404',
-        message  => $message,
-        error    => 1,
-        header   => 'Error page',
-    );
+    $self->render( template => 'gene/show', %$params );
 }
 
 ## --- Display part
 sub gbrowse {
-    my ( $self, $feature ) = @_;
+    my ($self) = @_;
 
     my $helper = $self->app->helper;
 
-    my $id                = $helper->id($feature);
+    my $feature           = $self->get_gene( $self->stash('id') );
     my $reference_feature = $helper->reference_feature($feature);
-    $self->exception( 'source_feature not found: ' . $id )
+    $self->exception( 'source_feature not found: ' . $self->stash('id') )
         if !$reference_feature;
 
     my $frame = $self->frame($feature);
-
     my $name =
           $reference_feature->name . ':'
         . $frame->{start} . '..'
         . $frame->{end};
-    my $track = join( '+', @{ $self->app->config->{gbrowse}->{tracks} } );
-    
+
+    my $config = $self->app->config->{content}->{gbrowse};
+
+    my $track = join( '+', @{ $config->{tracks} } );
+
     my $gbrowse =
-          '<a href="/db/cgi-bin/ggb/gbrowse/'
+          '<a href="'
+        . $config->{base_url}
+        . '/gbrowse/'
         . $helper->organism($feature)->species
         . '?name='
         . $name
         . '"><img src="'
-        . '/db/cgi-bin/ggb/gbrowse_img/'
+        . $config->{base_url}
+        . '/gbrowse_img/'
         . $helper->organism($feature)->species
         . '?name='
         . $name
-        . '&width=450&type='
+        . '&width='
+        . $config->{width}
+        . '&type='
         . $track
         . '&keystyle=between&abs=1&flip='
         . $helper->is_flipped($feature)
         . '"/></a>';
-    return $gbrowse;
+    $self->render_text($gbrowse);
 }
 
 sub blink {
-    my ( $self, $feature ) = @_;
+    my ($self) = @_;
 
     my $helper = $self->app->helper;
     my @links;
+
+    my $feature = $self->get_gene( $self->stash('id') );
 
     my @predictions =
         $helper->subfeatures( $feature, 'mRNA', 'Sequencing Center' );
     foreach my $prediction (@predictions) {
         my ($genbank_id) =
             $helper->dbxrefs( $prediction, 'Protein Accession Number' );
-        my $blink =
-              '<iframe'
-            . ' src="http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid='
-            . $genbank_id
-            . '"></iframe>';
 
-        return $blink;
+        my $blink =
+            $genbank_id
+            ? '<iframe' 
+            . ' src="'
+            . $self->app->config->{content}->{blink}->{url}
+            . $genbank_id
+            . '"></iframe>'
+            : '';
+
+        push @links, $blink;
     }
-    return join( '<br/>', @links );
+    $self->render_text( join( '<br/>', @links ) );
 }
 
 sub fasta {
-    my ( $self, $feature ) = @_;
+    my ($self) = @_;
 
-    return if !$self->app->config->{fasta};
+    my $config = $self->app->config->{content}->{fasta};
+    return if !$config;
 
     my $helper = $self->app->helper;
     my $markup = Bio::Graphics::Browser::Markup->new;
-    $markup->add_style( br    => '<br>' );
-    
-    my $flip = $helper->is_flipped($feature);
+    $markup->add_style( br => '<br>' );
+
+    my $feature = $self->get_gene( $self->stash('id') );
+    my $flip    = $helper->is_flipped($feature);
 
     ## get genomic sequence of a region ( make sure to address interbase coordinates )
     my $reference_feature  = $helper->reference_feature($feature);
@@ -141,22 +134,25 @@ sub fasta {
 
     ## store relative start and stop positions for each type defined in config
     my @coordinates;
-    my $schema = '';
-    my @schema_coordinates;
-    
-    foreach my $fasta ( @{ $self->app->config->{fasta} } ) {
+    my $legend = '';
+    my @legend_coordinates;
+
+    foreach my $fasta ( @{ $config } ) {
         my $type = $fasta->{type};
         my $source = $fasta->{source} || undef;
 
         $self->app->log->error('feature type is not defined') if !$type;
 
+        ## add track markup to legend
         my $name = $source ? $type . '-' . $source : $type;
         $markup->add_style( $name => $fasta->{style} );
-        
-        push @schema_coordinates, [ $name, length($schema), length($schema) + length($name) ];
-        $schema .= $name;
-        push @schema_coordinates, [ 'br', length($schema), length($schema) ];
-                
+
+        push @legend_coordinates,
+            [ $name, length($legend), length($legend) + length($name) ];
+        $legend .= $name;
+        push @legend_coordinates, [ 'br', length($legend), length($legend) ];
+
+        ## grep features with defined type and source from set
         my @features = $helper->filter_by_type( \@features, $type );
         @features = $helper->filter_by_source( \@features, $source )
             if $source;
@@ -164,89 +160,95 @@ sub fasta {
         foreach my $feature (@features) {
             my $frame_coordinates;
             if ( $fasta->{subfeature} ) {
-                foreach my $subfeature (
-                    $helper->subfeatures( $feature, $fasta->{subfeature} ) ) {
-                    $frame_coordinates =
-                        $self->frame_coordinates( $subfeature, $frame, $flip );
+                foreach my $subfeature ( $helper->subfeatures( $feature, $fasta->{subfeature} ) ) {
+                    $frame_coordinates = $self->frame_coordinates( $subfeature, $frame, $flip );
                     push @coordinates,
                         [
                         $name,
                         $frame_coordinates->{start},
                         $frame_coordinates->{end}
-                        ] if $frame_coordinates;
+                        ]
+                        if $frame_coordinates;
                 }
             }
             else {
-                $frame_coordinates =
-                    $self->frame_coordinates( $feature, $frame, $flip );
+                $frame_coordinates = $self->frame_coordinates( $feature, $frame, $flip );
                 push @coordinates,
                     [
-                    $name, $frame_coordinates->{start},
+                    $name, 
+                    $frame_coordinates->{start},
                     $frame_coordinates->{end}
                     ];
             }
         }
     }
 
-    ## add breaks
+    ## fix breaks
     my $n = 60;
     for ( my $i = 0; $i <= length($sequence) / $n; $i++ ) {
         push @coordinates, [ 'br', $i * $n, $i * $n ];
     }
-    
-    ## put some makeup
+
+    ## put makeup
     $markup->markup( \$sequence, \@coordinates );
-    $markup->markup( \$schema, \@schema_coordinates );
-    
+    $markup->markup( \$legend,   \@legend_coordinates );
+
     my $header = '>'
         . $reference_feature->name . ':'
         . $frame->{start} . ','
         . $frame->{end};
     $header .= ' (reverse complemented)' if $flip;
     
-    return 'Color schema:<br/>'.$schema.'<br/>'.$header.$sequence;
+    ## get the party started
+    $self->render_text( '<pre>Color schema:<br/>' 
+            . $legend . '<br/>' 
+            . $header
+            . $sequence
+            . '</pre>' );
 }
 
-sub frame {
-    my ( $self, $feature ) = @_;
-
+sub blast {
+    my ($self) = @_;
+    
+    my $result = '';
+    
     my $helper = $self->app->helper;
-
-    my $window_ext = $self->app->config->{gbrowse}->{padding};
-
-    my $start = $helper->start($feature) - $window_ext;
-    my $end   = $helper->end($feature) + $window_ext;
-
-    return { start => $start, end => $end, length => $end - $start };
-}
-
-sub frame_coordinates {
-    my ( $self, $feature, $frame, $flip ) = @_;
-
-    my $helper = $self->app->helper;
+    my $config = $self->app->config->{content}->{blast};
     
-    return if $helper->start($feature) > $frame->{end} || $helper->end($feature) < $frame->{start};
-    
-    my $start = $helper->start($feature) - $frame->{start} + 1;
-    $start = 0 if $start < 0;
-
-    my $end = $helper->end($feature) - $frame->{start} + 1;
-    $end = $frame->{length} + 1 if $end > $frame->{length};
-    
-    my ($f_start, $f_end);
-    if ($flip){
-        $f_start = $frame->{length} - $end + 1;
-        $f_start = 0 if $f_start < 0;
+    my $feature = $self->get_gene( $self->stash('id') );
         
-        $f_end = $frame->{length} - $start + 1;
+    my $reference_feature  = $helper->reference_feature($feature);
+    my @features =
+        $helper->splice_features( $reference_feature, $helper->start($feature) - 1,
+        $helper->end($feature) );
+    
+    my @filtered_features;
+    foreach my $fasta ( @{ $config->{features} } ) {
+        my $type = $fasta->{type};
+        my $source = $fasta->{source} || undef;
+        
+        my @features = $helper->filter_by_type( \@features, $type );
+        @features = $helper->filter_by_source( \@features, $source )
+            if $source; 
+        push @filtered_features, @features;
     }
 
-    return if $start && $end == 0;
-    return { start => $f_start, end => $f_end } if $flip;
-    return { start => $start, end => $end };
-
+    foreach my $feature (@filtered_features){
+        my $protein = $self->protein($feature);
+        
+        my $params = $config->{parameters};
+        $params->{sequence} = $protein;
+        
+        my $report_tx = $self->client->post_form(
+            $config->{report_url},
+            $params
+            );
+        my $report = $report_tx->res->body; 
+        $self->render_text( '<iframe src="'. $config->{format_report_url} . '/'. $report .'?noheader=1"' );
+    }
 }
 
+### TODO
 sub interpro {
     my ( $self, $feature ) = @_;
     
@@ -305,6 +307,48 @@ sub interpro {
 #    $self->client_poll($job_id);
 #    my $results = $self->get_results($job_id);
 #    return $self->format_results($results);
+}
+
+## --- Some helpers
+
+sub frame {
+    my ( $self, $feature ) = @_;
+
+    my $helper = $self->app->helper;
+
+    my $window_ext = $self->app->config->{content}->{gbrowse}->{padding};
+
+    my $start = $helper->start($feature) - $window_ext;
+    my $end   = $helper->end($feature) + $window_ext;
+
+    return { start => $start, end => $end, length => $end - $start };
+}
+
+sub frame_coordinates {
+    my ( $self, $feature, $frame, $flip ) = @_;
+
+    my $helper = $self->app->helper;
+    
+    return if $helper->start($feature) > $frame->{end} || $helper->end($feature) < $frame->{start};
+    
+    my $start = $helper->start($feature) - $frame->{start} + 1;
+    $start = 0 if $start < 0;
+
+    my $end = $helper->end($feature) - $frame->{start} + 1;
+    $end = $frame->{length} + 1 if $end > $frame->{length};
+    
+    my ($f_start, $f_end);
+    if ($flip){
+        $f_start = $frame->{length} - $end + 1;
+        $f_start = 0 if $f_start < 0;
+        
+        $f_end = $frame->{length} - $start + 1;
+    }
+
+    return if $start && $end == 0;
+    return { start => $f_start, end => $f_end } if $flip;
+    return { start => $start, end => $end };
+
 }
 
 sub submit_job {
@@ -714,6 +758,40 @@ sub add_featureprop {
         }
     };
     $self->failure("Error adding $type: $@") if $@;
+}
+
+sub protein {
+    my ($self, $feature) = @_;
+    
+    my $tx = $self->client->post_form(
+        'http://genomes.dictybase.org/fasta',
+        {   id       => $self->app->helper->id($feature),
+            organism => $self->app->helper->organism($feature)->species,
+            type     => 'Protein'
+        }
+    );
+    return $tx->res->body;
+}
+
+sub get_gene {
+    my ( $self, $id ) = @_;
+    my @features = $self->app->helper->search_feature($id);
+
+    $self->exception( 'gene not found: ' . $id ) if !@features;
+    $self->exception( 'more than one gene returned: ' . $id )
+        if @features > 1;
+    return $features[0];
+}
+
+sub exception {
+    my ( $self, $message ) = @_;
+    $self->res->code(404);
+    $self->render(
+        template => 'gene/404',
+        message  => $message,
+        error    => 1,
+        header   => 'Error page',
+    );
 }
 
 1;

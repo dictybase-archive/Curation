@@ -3,37 +3,42 @@
 
 <div id="container-gene" class="yui-navset">
     <ul class="yui-nav">
-        <li class="selected"><a href="#gbrowse"><em>GBrowse</em></a></li>
-        <li><a href="#blink"><em>Blink</em></a></li>
-        <li><a href="#tab3"><em>Curation</em></a></li>
+        <% if ($self->stash('gbrowse') || $self->stash('fasta')) {%>
+            <li class="selected"><a href="#gbrowse"><em>GBrowse</em></a></li>
+        <% } %>
+        <% if ($self->stash('blink')) {%>
+            <li><a href="#blink"><em>Blink</em></a></li>
+        <% } %>
+        <% if ($self->stash('blast')) {%>
+            <li><a href="#blast"><em>Blast</em></a></li>
+        <% } %>
+        <li><a href="#curation"><em>Curation</em></a></li>
     </ul>            
     <div class="yui-content">
-        <div>
-            <table class="content-table">
-                <tr>
-                    <td>
-                        <pre style="text-align:left;"><%= $self->stash('fasta')%></pre>
-                    <!--    
-                        <div id="panel1">
-	                        <div class="hd">Panel #1 </div>
-	                        <div class="bd"><pre style="text-align:left;"><%= $self->stash('fasta')%></pre></div>
-	                        <div class="ft">End of Panel #1</div>
-                        </div>
-                    -->
-                    </td>   
-                    
-                    <td class="title">
-                        <%= $self->stash('gbrowse')%> <br/>
-                        <pre>
-                            <%= $self->stash('interpro')%>
-                        </pre>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        <div>
-            <%= $self->stash('blink');%>
-        </div>
+        <% if ($self->stash('gbrowse') || $self->stash('fasta')) {%>
+            <div>
+                <table class="content-table">
+                    <tr>
+                        <% if ($self->stash('fasta')) { %>
+                            <td id="fasta" class="autoload">
+                            </td>   
+                        <% } %>
+                        <% if ($self->stash('gbrowse')) { %>
+                            <td id="gbrowse" class="autoload title">
+                            </td>
+                        <% } %>
+                    </tr>
+                </table>
+            </div>
+        <% } %>
+        <% if ($self->stash('blink')) {%>
+            <div id="blink" class="autoload">
+            </div>
+        <% } %>
+        <% if ($self->stash('blast')) {%>
+            <div id="blast" class="autoload">
+            </div>
+        <% } %>
         <div>
             <form id="curation-form">
                 <table class="content-table">
@@ -148,9 +153,7 @@
 </div>
 
 <script>
-    var myTabs = new YAHOO.widget.TabView("container");   
+    var myTabs = new YAHOO.widget.TabView("container-gene");   
     YAHOO.util.Event.onDOMReady(function(){ init("<%= $self->stash('id') %>") });
-//    YAHOO.example.container.panel1 = new YAHOO.widget.Panel("panel1", { width:"320px", visible:false, constraintoviewport:true } ); 
-//	YAHOO.example.container.panel1.render(); 
 </script>
 

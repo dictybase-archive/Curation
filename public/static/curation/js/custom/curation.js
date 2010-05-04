@@ -20,6 +20,7 @@
         this.supportedByUTS = Dom.get('supported-by-uts');
         
         this.curationApproveButtonEl = 'curation-approve';
+        this.autoload = 'autoload';
         
         this.searchButton = new YAHOO.widget.Button({
             container: this.searchButtonEl,
@@ -41,11 +42,20 @@
                 scope: this
             }
         });
-
-    };
-    
-    YAHOO.Dicty.Curation.prototype.search = function(value) {
-        YAHOO.log('searching: ' + value, 'error');
+        var autoloadNodes = Dom.getElementsByClassName(this.autoload);
+        for (i in autoloadNodes) {
+            var args = [autoloadNodes[i].id];
+            
+            YAHOO.util.Connect.asyncRequest('GET', '/curation/gene/' + this.geneID + '/' + autoloadNodes[i].id,
+            {
+                success: function(obj) {
+                    Dom.get(obj.argument[0]).innerHTML = obj.responseText;
+                },
+                failure: this.onFailure,
+                scope: this,
+                argument : args
+            });
+        }
     };
     
     YAHOO.Dicty.Curation.prototype.curate = function(estSupport, ssSupport, gcSupport, utsSupport) {
@@ -76,13 +86,7 @@
     YAHOO.Dicty.Curation.prototype.onFailure = function(obj) {
         alert(obj.statusText);
     }
-
 })();
-
-function search(v) {
-    var curation = new YAHOO.Dicty.Curation;
-    curation.search(v);
-}
 
 function init(v) {
     var curation = new YAHOO.Dicty.Curation;

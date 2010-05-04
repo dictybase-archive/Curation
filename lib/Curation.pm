@@ -70,6 +70,18 @@ sub startup {
     $bridge->route('/gene/:id')
         ->to( controller => 'gene', action => 'show', format => 'html' );
 
+    $bridge->route('/gene/:id/fasta')->via('get')
+        ->to( controller => 'gene', action => 'fasta', format => 'html' );
+
+    $bridge->route('/gene/:id/gbrowse')->via('get')
+        ->to( controller => 'gene', action => 'gbrowse', format => 'html' );
+
+    $bridge->route('/gene/:id/blink')->via('get')
+        ->to( controller => 'gene', action => 'blink', format => 'html' );
+    
+    $bridge->route('/gene/:id/blast')->via('get')
+        ->to( controller => 'gene', action => 'blast', format => 'html' );
+
     $bridge->route('/gene/:id/update')
         ->to( controller => 'gene', action => 'update', format => 'html' );
         

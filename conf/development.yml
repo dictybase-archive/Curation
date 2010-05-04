@@ -9,56 +9,76 @@ organism:
         prefix : DDB
         site_name : dictyBase
 
-gbrowse:
-    tracks:
-        - Gene
-        - dictyBase
-        - Predictions
-        - Repredictions
-        - tRNA
-        - ncRNA
-        - ESTs
-    padding: 1000
-    
-fasta:
-    - type   : mRNA
-      source : Sequencing Center
-      style  : FGCOLOR red
-      subfeature : CDS
-    - type   : mRNA
-      source : geneID reprediction
-      style  : FGCOLOR blue
-      subfeature : CDS
-    - type   : mRNA
-      source : dictyBase Curator
-      style  : BGCOLOR yellow
-      subfeature : CDS
-    - type   : EST
-      style  : Text-decoration: underline
-
-interpro:
-    wdsl : http://www.ebi.ac.uk/Tools/webservices/wsdl/WSInterProScan.wsdl
-    timeout: 600
-    proxy : http://localhost/
-    check_interval : 15
-    features:
+content:
+    gbrowse :
+        tracks:
+            - Gene
+            - dictyBase
+            - Predictions
+            - Repredictions
+            - tRNA
+            - ncRNA
+            - ESTs
+        padding : 1000
+        width : 450
+        base_url : /db/cgi-bin/ggb/ 
+        
+    fasta:
         - type   : mRNA
           source : Sequencing Center
+          style  : FGCOLOR red
+          subfeature : CDS
         - type   : mRNA
-          source : geneID reprediction        
-    apps :
-        - blastprodom
-        - fprintscan
-        - gene3d
-        - hamap
-        - hmmpanther
-        - hmmpfam
-        - hmmpir
-        - hmmsmart
-        - hmmtigr
-        - patternscan
-        - profilescan
-        - signalp
-        - superfamily
-        - tmhmm
+          source : geneID reprediction
+          style  : FGCOLOR blue
+          subfeature : CDS
+        - type   : mRNA
+          source : dictyBase Curator
+          style  : BGCOLOR yellow
+          subfeature : CDS
+        - type   : EST
+          style  : Text-decoration: underline
     
+    blink :
+        url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=
+    
+    blast :
+        features:
+            - type   : mRNA
+              source : Sequencing Center
+        report_url : http://192.168.60.10/tools/blast/run
+        format_report_url : http://192.168.60.10/tools/blast/report
+        parameters :
+            database : dpur_predictions_protein
+            #purpureum_protein.fas
+            evalue : 0.1
+            filter : T
+            gapped : T
+            limit  : 50
+            matrix : BLOSUM62
+            program : blastp
+    interpro :
+        wdsl : http://www.ebi.ac.uk/Tools/webservices/wsdl/WSInterProScan.wsdl
+        timeout: 600
+        proxy : http://localhost/
+        check_interval : 15
+        features:
+            - type   : mRNA
+              source : Sequencing Center
+            - type   : mRNA
+              source : geneID reprediction        
+        apps :
+            - blastprodom
+            - fprintscan
+            - gene3d
+            - hamap
+            - hmmpanther
+            - hmmpfam
+            - hmmpir
+            - hmmsmart
+            - hmmtigr
+            - patternscan
+            - profilescan
+            - signalp
+            - superfamily
+            - tmhmm
