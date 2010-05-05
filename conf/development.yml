@@ -11,7 +11,7 @@ organism:
 
 content:
     gbrowse :
-        version : 1
+        version : 2
         tracks:
             - Gene
             - dictyBase
@@ -86,4 +86,8 @@ content:
             - tmhmm
     
     protein:
-        url : http://192.168.60.10/fasta
+        url : http://genomes.dictybase.org/fasta
+        features:
+            - type   : mRNA
+              source : Sequencing Center
+

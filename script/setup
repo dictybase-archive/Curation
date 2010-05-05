@@ -39,4 +39,4 @@ my $user_insert_sql = 'INSERT INTO users (name, password, initials) values (?,?,
 my $sth = $dbh->prepare($user_insert_sql);
 $sth->execute('PFEY', 'PFEY12345', 'PF');
 $sth->execute('PGAUDET', 'PGAUDET12345', 'PG');
-$sth->execute('RDODSON', 'RDODSON12345', 'RD');
+$sth->execute('RDDODSON', 'RDODSON12345', 'RD');

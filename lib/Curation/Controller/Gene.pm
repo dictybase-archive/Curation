@@ -251,11 +251,34 @@ sub blast {
 
 sub protein {
     my ($self) = @_;
-
+    my $output = '';
     my $feature = $self->get_gene( $self->stash('id') );
+    
+    my $helper = $self->app->helper;
+    my $config = $self->app->config->{content}->{protein};
 
-    $self->render_text( $self->app->helper->protein($feature) );
+    my $reference_feature  = $helper->reference_feature($feature);
+    my @features =
+        $helper->splice_features( $reference_feature, $helper->start($feature) - 1,
+        $helper->end($feature) );
+    
+    my @filtered_features;
+    foreach my $fasta ( @{ $config->{features} } ) {
+        my $type = $fasta->{type};
+        my $source = $fasta->{source} || undef;
+        
+        my @features = $helper->filter_by_type( \@features, $type );
+        @features = $helper->filter_by_source( \@features, $source )
+            if $source; 
+        push @filtered_features, @features;
+    }
+
+    foreach my $feature (@filtered_features){
+        $output .= '<pre>'. $helper->protein($feature) . '</pre><br/>';
+    }
+    $self->render_text($output);
 }
+
 ### TODO
 sub interpro {
     my ( $self, $feature ) = @_;

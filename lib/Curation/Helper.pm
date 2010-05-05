@@ -195,6 +195,7 @@ sub protein {
     my ($self, $feature) = @_;
     my $protein = '';
     my $count = 0;
+
     while ($protein eq '' && $count < 3 ){
         my $tx = $self->app->client->post_form(
             $self->app->config->{content}->{protein}->{url},
@@ -207,7 +208,7 @@ sub protein {
         $count++;
         $self->app->log->debug('could not get sequence: '. Dumper $tx) if !$protein;
     }
-    return $protein;
+   return $protein;
 }
 
 1;
