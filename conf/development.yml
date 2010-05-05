@@ -11,6 +11,7 @@ organism:
 
 content:
     gbrowse :
+        version : 1
         tracks:
             - Gene
             - dictyBase
@@ -21,7 +22,8 @@ content:
             - ESTs
         padding : 1000
         width : 450
-        base_url : /db/cgi-bin/ggb/ 
+        link_url : /db/cgi-bin/ggb/gbrowse
+        img_url  : /db/cgi-bin/ggb/gbrowse_img
         
     fasta:
         - type   : mRNA
@@ -57,6 +59,7 @@ content:
             limit  : 50
             matrix : BLOSUM62
             program : blastp
+    
     interpro :
         wdsl : http://www.ebi.ac.uk/Tools/webservices/wsdl/WSInterProScan.wsdl
         timeout: 600
@@ -82,3 +85,6 @@ content:
             - signalp
             - superfamily
             - tmhmm
+    
+    protein:
+        url : http://192.168.60.10/fasta

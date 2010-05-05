@@ -8,6 +8,7 @@ use Chado::AutoDBI;
 use dicty::DB::AutoDBI;
 use POSIX qw/strftime/;
 use SOAP::Lite;
+use Data::Dumper;
 
 # Other modules:
 use base 'Mojolicious::Controller';
@@ -49,30 +50,27 @@ sub gbrowse {
         . $frame->{start} . '..'
         . $frame->{end};
 
-    my $config = $self->app->config->{content}->{gbrowse};
+    my $config  = $self->app->config->{content}->{gbrowse};
+    my $species = $helper->organism($feature)->species;
+    my $tracks  = join( ';', map { 't=' . $_ } @{ $config->{tracks} } );
+    my $link    = $config->{link_url} . '?name=' . $name;
+    
+    my $config_name =
+          $config->{version} != 2
+        ? $self->app->config->{organism}->{$species}->{site_name}
+        : $species;
 
-    my $track = join( '+', @{ $config->{tracks} } );
-
-    my $gbrowse =
-          '<a href="'
-        . $config->{base_url}
-        . '/gbrowse/'
-        . $helper->organism($feature)->species
-        . '?name='
+    my $img_url =
+          $config->{img_url} . '/' 
+        . $config_name . '/?name=' 
         . $name
-        . '"><img src="'
-        . $config->{base_url}
-        . '/gbrowse_img/'
-        . $helper->organism($feature)->species
-        . '?name='
-        . $name
-        . '&width='
+        . ';width='
         . $config->{width}
-        . '&type='
-        . $track
-        . '&keystyle=between&abs=1&flip='
-        . $helper->is_flipped($feature)
-        . '"/></a>';
+        . ';keystyle=between;abs=1;flip='
+        . $helper->is_flipped($feature) . ';'
+        . $tracks;
+
+    my $gbrowse = '<a href="' . $link . '"><img src="' . $img_url . '"/></a>';
     $self->render_text($gbrowse);
 }
 
@@ -234,7 +232,7 @@ sub blast {
     }
 
     foreach my $feature (@filtered_features){
-        my $protein = $self->protein($feature);
+        my $protein = $helper->protein($feature);
         
         my $params = $config->{parameters};
         $params->{sequence} = $protein;
@@ -244,10 +242,20 @@ sub blast {
             $params
             );
         my $report = $report_tx->res->body; 
+        if (!$report){
+             $self->render_text('error retrieving BLAST results');
+        }
         $self->render_text( '<iframe src="'. $config->{format_report_url} . '/'. $report .'?noheader=1"' );
     }
 }
 
+sub protein {
+    my ($self) = @_;
+
+    my $feature = $self->get_gene( $self->stash('id') );
+
+    $self->render_text( $self->app->helper->protein($feature) );
+}
 ### TODO
 sub interpro {
     my ( $self, $feature ) = @_;
@@ -758,19 +766,6 @@ sub add_featureprop {
         }
     };
     $self->failure("Error adding $type: $@") if $@;
-}
-
-sub protein {
-    my ($self, $feature) = @_;
-    
-    my $tx = $self->client->post_form(
-        'http://genomes.dictybase.org/fasta',
-        {   id       => $self->app->helper->id($feature),
-            organism => $self->app->helper->organism($feature)->species,
-            type     => 'Protein'
-        }
-    );
-    return $tx->res->body;
 }
 
 sub get_gene {
