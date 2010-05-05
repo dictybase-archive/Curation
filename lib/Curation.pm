@@ -6,7 +6,7 @@ use YAML;
 use dicty::DBH;
 use File::Spec::Functions;
 
-use local::lib '/home/ubuntu/dictyBase/Libs/modernperl';
+#use local::lib '/home/ubuntu/dictyBase/Libs/modernperl';
 
 use Curation::Renderer::TT;
 use Curation::Helper;
