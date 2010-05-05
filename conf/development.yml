@@ -48,11 +48,10 @@ content:
         features:
             - type   : mRNA
               source : Sequencing Center
-        report_url : http://192.168.60.10/tools/blast/run
-        format_report_url : http://192.168.60.10/tools/blast/report
+        report_url : http://testdb.dictybase.org/tools/blast/run
+        format_report_url : http://testdb.dictybase.org/tools/blast/report
         parameters :
-            database : dpur_predictions_protein
-            #purpureum_protein.fas
+            database : purpureum_protein.fas
             evalue : 0.1
             filter : T
             gapped : T
