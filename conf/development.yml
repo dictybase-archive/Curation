@@ -23,8 +23,8 @@ content:
             - RNAseq
         padding : 1000
         width : 300
-        link_url : /tools/gbrowse
-        img_url  : /tools/gbrowse_img
+        link_url : http://testdb.dictybase.org/tools/gbrowse2
+        img_url  : http://testdb.dictybase.org/tools/gbrowse_img
         
     fasta:
         - type   : mRNA
@@ -41,6 +41,10 @@ content:
           subfeature : CDS
         - type   : EST
           style  : Text-decoration: underline
+          subfeature : nucleotide_match
+#        - type   : RNAseq
+#          style  : BGCOLOR lime
+#          sourcedb : rnaseq.sqlite
     
     blink :
         url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=
