@@ -21,7 +21,7 @@ content:
             - ESTs
         padding : 1000
         width : 450
-        base_url : /db/cgi-bin/ggb/ 
+        base_url : /tools 
         
     fasta:
         - type   : mRNA

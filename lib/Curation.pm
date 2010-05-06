@@ -40,23 +40,23 @@ sub startup {
     my $base = $router->namespace;
     $router   = $router->namespace($base. '::Controller');
     
-    $router->route('/curation/login')->to(
+    $router->route('/login')->to(
         controller => 'usersession',
         action     => 'login',
         format     => 'html'
     );
-    $router->route('/curation/logout')->to(
+    $router->route('/logout')->to(
         controller => 'usersession',
         action     => 'logout',
         format     => 'html'
     );
     
-    $router->route('/curation/usersession')->via('post')->to(
+    $router->route('/usersession')->via('post')->to(
         controller => 'usersession',
         action     => 'create',
     );
 
-    my $bridge = $router->bridge('/curation')->to(
+    my $bridge = $router->bridge->to(
         controller => 'usersession',
         action     => 'validate'
     );
