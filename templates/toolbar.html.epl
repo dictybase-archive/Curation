@@ -16,8 +16,7 @@
                                         <form action="/db/cgi-bin/search/search.pl">
                                             <input id="search-input" name="query" type="text" size="30" value="use * as a wildcard character"> <nobr><input type="submit" name="submit" value="Search All"> <input type="submit" name="genes_only" value="Gene Names Only"></nobr>
                                         </form>
-                                    </div>
-                                    <!--
+                                    </div><!--
                                     <img src="/static/curation/images/help-right.gif">
                                     -->
                                 </div>
@@ -255,16 +254,15 @@
                                 <img src="/static/curation/images/menu-top-right.gif">
                             </td>
                             <td id="about_help">
-                                <a href="/About_dictyBase/">About Us</a> 
-                                <a href="/db/cgi-bin/dictyBase/suggestion">Contact</a> 
-                                <a href="/FAQ/HelpFilesIndex.html">Help</a>
+                                <a href="/About_dictyBase/">About Us</a> <a href="/db/cgi-bin/dictyBase/suggestion">Contact</a> <a href="/FAQ/HelpFilesIndex.html">Help</a>
                             </td>
                         </tr>
                     </table>
                 </div>
             </div>
         </div>
-<script>
+        
+<script type="text/javascript">
     var searchInput = YAHOO.util.Dom.get('search-input');
     YAHOO.util.Event.addFocusListener(searchInput.id,
         function() {
@@ -274,3 +272,4 @@
         };
     });
 </script>
+
