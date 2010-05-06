@@ -74,7 +74,7 @@
                         <td>
                             <ul>
                                 <li>
-                                  <input id="supported-by-est" type="checkbox" checked="checked" value="T"/>
+                                  <input id="supported-by-est" type="checkbox" value="T"/>
                                   <label for="supported-by-est">EST</label>
                                 </li>
                                 <li>

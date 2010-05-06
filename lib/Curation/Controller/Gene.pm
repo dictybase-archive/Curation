@@ -9,6 +9,7 @@ use dicty::DB::AutoDBI;
 use POSIX qw/strftime/;
 use SOAP::Lite;
 use Data::Dumper;
+use Bio::DB::SeqFeature::Store;
 
 # Other modules:
 use base 'Mojolicious::Controller';
@@ -154,7 +155,14 @@ sub fasta {
         my @features = $helper->filter_by_type( \@features, $type );
         @features = $helper->filter_by_source( \@features, $source )
             if $source;
-
+        
+#        if (!@features && $fasta->{sourcedb}){
+#            # Open the feature database
+#            my $db      = Bio::DB::SeqFeature::Store->new( 
+#                -adaptor => 'DBI::mysql',
+#                -dsn     => 'dbi:mysql:test',
+#            );
+#        }
         foreach my $feature (@features) {
             my $frame_coordinates;
             if ( $fasta->{subfeature} ) {
@@ -245,7 +253,8 @@ sub blast {
         if (!$report){
              $self->render_text('error retrieving BLAST results');
         }
-        $self->render_text( '<iframe src="'. $config->{format_report_url} . '/'. $report .'?noheader=1"' );
+        my $out = '<iframe src="'. $config->{format_report_url} . '/'. $report .'?noheader=1"></iframe>';
+        $self->render_text( $out );
     }
 }
 
