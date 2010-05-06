@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 
-use local::lib '/home/ubuntu/dictyBase/Libs/modernperl';
+#use local::lib '/home/ubuntu/dictyBase/Libs/modernperl';
 
 use FindBin;
 
