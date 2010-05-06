@@ -6,6 +6,9 @@
         <% if ($self->stash('gbrowse') || $self->stash('fasta')) {%>
             <li class="selected"><a href="#gbrowse"><em>GBrowse</em></a></li>
         <% } %>
+        <% if ($self->stash('protein')) { %>
+            <li><a href="#protein"><em>Protein</em></a></li>
+        <% } %>
         <% if ($self->stash('blink')) {%>
             <li><a href="#blink"><em>Blink</em></a></li>
         <% } %>
@@ -26,9 +29,13 @@
                         <% if ($self->stash('gbrowse')) { %>
                             <td id="gbrowse" class="autoload title">
                             </td>
-                        <% } %>
+                        <% } %>                            
                     </tr>
                 </table>
+            </div>
+        <% } %>
+        <% if ($self->stash('protein')) { %>
+            <div id="protein" class="autoload">
             </div>
         <% } %>
         <% if ($self->stash('blink')) {%>
@@ -67,7 +74,7 @@
                         <td>
                             <ul>
                                 <li>
-                                  <input id="supported-by-est" type="checkbox" checked="checked" value="T"/>
+                                  <input id="supported-by-est" type="checkbox" value="T"/>
                                   <label for="supported-by-est">EST</label>
                                 </li>
                                 <li>

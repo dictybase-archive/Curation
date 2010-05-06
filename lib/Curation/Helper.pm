@@ -2,6 +2,7 @@ package Curation::Helper;
 
 use strict;
 use Chado::AutoDBI;
+use Data::Dumper;
 use dicty::DB::AutoDBI;
 
 use base 'Mojo::Base';
@@ -191,8 +192,23 @@ sub is_flipped {
 }
 
 sub protein {
-    my ($self) = @_;
-    return $self->app->client->post('http://genomes.dictybase.org/fasta', { id => 'DDB0202886', organism => 'discoideum', type => 'Protein'});
+    my ($self, $feature) = @_;
+    my $protein = '';
+    my $count = 0;
+
+    while ($protein eq '' && $count < 3 ){
+        my $tx = $self->app->client->post_form(
+            $self->app->config->{content}->{protein}->{url},
+            {   id       => $self->app->helper->id($feature),
+                organism => $self->app->helper->organism($feature)->species,
+                type     => 'Protein'
+            }
+        );
+        $protein = $tx->res->body;
+        $count++;
+        $self->app->log->debug('could not get sequence: '. Dumper $tx) if !$protein;
+    }
+   return $protein;
 }
 
 1;

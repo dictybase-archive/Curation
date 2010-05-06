@@ -76,6 +76,9 @@ sub startup {
     $bridge->route('/gene/:id/gbrowse')->via('get')
         ->to( controller => 'gene', action => 'gbrowse', format => 'html' );
 
+    $bridge->route('/gene/:id/protein')->via('get')
+        ->to( controller => 'gene', action => 'protein', format => 'html' );
+
     $bridge->route('/gene/:id/blink')->via('get')
         ->to( controller => 'gene', action => 'blink', format => 'html' );
     

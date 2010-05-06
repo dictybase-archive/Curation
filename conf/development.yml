@@ -11,6 +11,7 @@ organism:
 
 content:
     gbrowse :
+        version : 2
         tracks:
             - Gene
             - dictyBase
@@ -19,9 +20,11 @@ content:
             - tRNA
             - ncRNA
             - ESTs
+            - RNAseq
         padding : 1000
-        width : 450
-        base_url : /tools 
+        width : 300
+        link_url : http://testdb.dictybase.org/tools/gbrowse2
+        img_url  : http://testdb.dictybase.org/tools/gbrowse_img
         
     fasta:
         - type   : mRNA
@@ -38,6 +41,10 @@ content:
           subfeature : CDS
         - type   : EST
           style  : Text-decoration: underline
+          subfeature : nucleotide_match
+#        - type   : RNAseq
+#          style  : BGCOLOR lime
+#          sourcedb : rnaseq.sqlite
     
     blink :
         url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=
@@ -46,17 +53,17 @@ content:
         features:
             - type   : mRNA
               source : Sequencing Center
-        report_url : http://192.168.60.10/tools/blast/run
-        format_report_url : http://192.168.60.10/tools/blast/report
+        report_url : http://testdb.dictybase.org/tools/blast/run
+        format_report_url : http://testdb.dictybase.org/tools/blast/report
         parameters :
-            database : dpur_predictions_protein
-            #purpureum_protein.fas
+            database : purpureum_protein.fas
             evalue : 0.1
-            filter : T
+            filter : F
             gapped : T
-            limit  : 50
+            limit  : 5
             matrix : BLOSUM62
             program : blastp
+    
     interpro :
         wdsl : http://www.ebi.ac.uk/Tools/webservices/wsdl/WSInterProScan.wsdl
         timeout: 600
@@ -82,3 +89,10 @@ content:
             - signalp
             - superfamily
             - tmhmm
+    
+    protein:
+        url : http://genomes.dictybase.org/fasta
+        features:
+            - type   : mRNA
+              source : Sequencing Center
+
