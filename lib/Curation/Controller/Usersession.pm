@@ -30,19 +30,22 @@ sub validate {
 }
 
 sub create {
-    my ( $self, $c ) = @_;
+    my ( $self ) = @_;
+ 
     my $password = $self->req->param('password') || '';
     my $username = $self->req->param('username') || '';
     
     my $dbfile = catfile( $self->app->home->rel_dir('db'), $self->app->config->{database} );
     my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbfile", '', '' );
-    
+        
     my $sql = 'SELECT initials FROM users WHERE name like ? and password like ?;';
     my $sth = $dbh->prepare($sql);
     $sth->execute( $username, $password );
     
     my $initials = $sth->fetchrow();
     
+    $self->app->log->debug('login: ' . $initials);
+
     $self->redirect_to('/curation/login') if !$initials;
         
     $self->session( initials => $initials, username => $username );

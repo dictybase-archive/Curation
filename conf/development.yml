@@ -40,11 +40,13 @@ content:
           style  : BGCOLOR yellow
           subfeature : CDS
         - type   : EST
-          style  : Text-decoration: underline
+          style  : text-decoration: underline
           subfeature : nucleotide_match
-#        - type   : RNAseq
-#          style  : BGCOLOR lime
-#          sourcedb : rnaseq.sqlite
+        - type   : RNAseq
+          style  : UPPERCASE
+          sourcedb : 
+              dsn : /home/ubuntu/dictyBase/Apps/curation/db/rnaseq.sqlite
+              adaptor : DBI::SQLite
     
     blink :
         url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=

@@ -10,6 +10,7 @@ use POSIX qw/strftime/;
 use SOAP::Lite;
 use Data::Dumper;
 use Bio::DB::SeqFeature::Store;
+use File::Spec::Functions;
 
 # Other modules:
 use base 'Mojolicious::Controller';
@@ -156,13 +157,20 @@ sub fasta {
         @features = $helper->filter_by_source( \@features, $source )
             if $source;
         
-#        if (!@features && $fasta->{sourcedb}){
-#            # Open the feature database
-#            my $db      = Bio::DB::SeqFeature::Store->new( 
-#                -adaptor => 'DBI::mysql',
-#                -dsn     => 'dbi:mysql:test',
-#            );
-#        }
+        ## if feature have not been found but config contains source database, try to search there
+        if ( !@features && $fasta->{sourcedb} ) {
+            # Open the feature database
+            my $db = Bio::DB::SeqFeature::Store->new(
+                -adaptor => $fasta->{sourcedb}->{adaptor},
+                -dsn     => $fasta->{sourcedb}->{dsn},
+            );
+            @features = $db->get_features_by_location(
+                -seqid => $reference_feature->name,
+                -start  => $frame->{start} - 1,
+                -end    => $frame->{end}
+            );            
+        }
+
         foreach my $feature (@features) {
             my $frame_coordinates;
             if ( $fasta->{subfeature} ) {
@@ -245,7 +253,7 @@ sub blast {
         my $params = $config->{parameters};
         $params->{sequence} = $protein;
         
-        my $report_tx = $self->client->post_form(
+        my $report_tx = $self->client->async->post_form(
             $config->{report_url},
             $params
             );

@@ -38,7 +38,14 @@ sub reference_feature {
 
 sub start {
     my ( $self, $feature ) = @_;
-
+    
+    my $start;
+    
+    eval {
+        $start = $feature->start -1;
+    };
+    return $start if $start;
+    
     my $floc = Chado::Featureloc->get_single_row(
         { feature_id => $feature->feature_id } );
 
@@ -49,6 +56,12 @@ sub start {
 sub end {
     my ( $self, $feature ) = @_;
 
+    my $end;
+    eval {
+        $end = $feature->stop;
+    };
+    return $end if $end;
+    
     my $floc = Chado::Featureloc->get_single_row(
         { feature_id => $feature->feature_id } );
 
@@ -153,6 +166,7 @@ sub filter_by_source {
 
     my $dbxref = Chado::Dbxref->get_single_row( { accession => $source } );
     $self->app->log->debug("$source dbxref not found") if !$dbxref;
+    return if !$dbxref;
     
     return grep {
         Chado::Feature_Dbxref->get_single_row(
@@ -171,6 +185,7 @@ sub filter_by_type {
             cv_id => Chado::Cv->get_single_row( { name => 'sequence' } )
         }
     );
+    return if !$type_cvterm;
     return grep { $_->type == $type_cvterm->cvterm_id } @$features;
 }
 
@@ -197,7 +212,7 @@ sub protein {
     my $count = 0;
 
     while ($protein eq '' && $count < 3 ){
-        my $tx = $self->app->client->post_form(
+        my $tx = $self->app->client->async->post_form(
             $self->app->config->{content}->{protein}->{url},
             {   id       => $self->app->helper->id($feature),
                 organism => $self->app->helper->organism($feature)->species,
