@@ -15,7 +15,8 @@ iframe {
     border:0 none;
 }
 pre {
-    line-height: 110%;
+    font-size:13px;
+    line-height:16px;
 }
 fieldset#controls {
     border : 0 none;
