@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 use strict;
-use local::lib '/home/ubuntu/dictyBase/Libs/GB2';
+use local::lib '/home/ubuntu/dictyBase/Libs/gb2';
 use FindBin;
 use Mojo::Server::FastCGI;
 

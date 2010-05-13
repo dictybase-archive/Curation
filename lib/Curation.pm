@@ -85,6 +85,9 @@ sub startup {
     $bridge->route('/gene/:id/blast')->via('get')
         ->to( controller => 'gene', action => 'blast', format => 'html' );
 
+    $bridge->route('/gene/:id/curation')->via('get')
+        ->to( controller => 'gene', action => 'curation', format => 'html' );
+
     $bridge->route('/gene/:id/update')
         ->to( controller => 'gene', action => 'update', format => 'html' );
         

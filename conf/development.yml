@@ -25,28 +25,32 @@ content:
         width : 300
         link_url : http://testdb.dictybase.org/tools/gbrowse2
         img_url  : http://testdb.dictybase.org/tools/gbrowse_img
-        
+#        link_url : /db/cgi-bin/ggb/
+#        img_url  : /db/cgi-bin/ggb/gbrowse_img
+    
     fasta:
-        - type   : mRNA
-          source : Sequencing Center
-          style  : FGCOLOR red
-          subfeature : CDS
-        - type   : mRNA
-          source : geneID reprediction
-          style  : FGCOLOR blue
-          subfeature : CDS
-        - type   : mRNA
-          source : dictyBase Curator
-          style  : BGCOLOR yellow
-          subfeature : CDS
-        - type   : EST
-          style  : text-decoration: underline
-          subfeature : nucleotide_match
-        - type   : RNAseq
-          style  : UPPERCASE
-          sourcedb : 
-              dsn : /home/ubuntu/dictyBase/Apps/curation/db/rnaseq.sqlite
-              adaptor : DBI::SQLite
+        padding : 1000
+        features:
+            - type   : mRNA
+              source : Sequencing Center
+              style  : FGCOLOR red
+              subfeature : CDS
+            - type   : mRNA
+              source : geneID reprediction
+              style  : FGCOLOR blue
+              subfeature : CDS
+            - type   : mRNA
+              source : dictyBase Curator
+              style  : BGCOLOR yellow
+              subfeature : CDS
+            - type   : EST
+              style  : text-decoration: underline
+              subfeature : nucleotide_match
+            - type   : RNAseq
+              style  : UPPERCASE
+              sourcedb : 
+                  dsn : /home/ubuntu/dictyBase/Apps/curation/db/rnaseq.sqlite
+                  adaptor : DBI::SQLite
     
     blink :
         url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=
@@ -65,6 +69,32 @@ content:
             limit  : 5
             matrix : BLOSUM62
             program : blastp
+    
+    curation:
+        features:
+            - type   : mRNA
+              source : Sequencing Center
+            - type   : mRNA
+              source : geneID reprediction
+        qualifiers:
+            - type : derived from
+              name : Derived from
+              values: 
+                  - Gene prediction
+                  - Gene sequence
+                  - Curator inference
+            - type : supported by
+              name : Supported by
+              values :
+                  - EST
+                  - Sequence similarity
+                  - Genomic context
+                  - Unpublished transcript sequence
+            - type : qualifier
+              name : Notes
+              values: 
+                  - Incomplete support
+                  - Conflicting evidence
     
     interpro :
         wdsl : http://www.ebi.ac.uk/Tools/webservices/wsdl/WSInterProScan.wsdl
@@ -97,4 +127,5 @@ content:
         features:
             - type   : mRNA
               source : Sequencing Center
+    
 

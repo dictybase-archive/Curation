@@ -49,10 +49,10 @@ fieldset#controls {
 }
 .content-table td ul{
     list-style: none;
+    padding-left: 10px;
 }
 .content-table td.title  {
     background:none repeat scroll 0 0 #DFE8F6;
-    width:20%;
     border-right:1px dotted #A3BAE9;    
 }
 .content-table th{
