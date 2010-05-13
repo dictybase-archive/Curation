@@ -1,0 +1,46 @@
+% my ($self, $c) = @_;       
+<div>
+    <form id="curation-form">
+        <table class="content-table">
+            <tr> 
+                <% if ($self->stash('ids')) {%>
+                    <td class="title">Features</td>
+                <% } %>
+                <% foreach my $qualifier (@{$self->stash('qualifiers')}) { %>
+                    <td class="title"><%= $qualifier->{'name'} %></td>
+                <% } %>                            
+            </tr>
+            <tr>
+                <% if ($self->stash('ids')) {%>
+                    <td>
+                        <ul>
+                            <% foreach my $feature (@{$self->stash('ids')}) { %>
+                                <li>
+                                    <input class="feature" id="<%= $feature %>" type="checkbox" value="T"/>
+                                    <label for="<%= $feature %>"><%= $feature %></label>
+                                </li>
+                            <% } %>
+                        </ul>
+                    </td>
+                <% } %>
+                <% foreach my $qualifier (@{$self->stash('qualifiers')}) { %>
+                    <td>
+                        <ul>
+                            <% foreach my $value (@{ $qualifier->{'values'} }) { %>
+                                <% my $id = lc( $qualifier->{'type'} . ' ' . $value); $id =~ s/ /-/g; %>
+                                <li>
+                                    <input class="qualifier" id="<%= $id %>" type="checkbox" value="T"/>
+                                    <label for="<%= $id %>"><%= $value %></label>
+                                </li>
+                            <% } %>
+                        </ul>
+                    </td>
+                <% } %>
+            </tr>
+            <tr><th  colspan="4">
+                <span id="curation-approve"/></span>
+            </th></tr>
+        </table>                            
+    </form>
+</div>
+
