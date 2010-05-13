@@ -241,6 +241,8 @@ sub get_features {
         my @features = $self->filter_by_type( \@all_features, $type );
         @features = $self->filter_by_source( \@features, $source )
             if $source; 
+        map {$_->{type} = $type} @features;
+        map {$_->{source} = $source} @features if $source;
         push @filtered_features, @features;
     }
     return @filtered_features;

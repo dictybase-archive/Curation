@@ -76,30 +76,27 @@ sub gbrowse {
 sub blink {
     my ($self) = @_;
 
-    my $helper = $self->app->helper;
-    my @links;
-
+    my $output;
+    my $helper  = $self->app->helper;
     my $feature = $self->get_gene( $self->stash('id') );
-
     my @predictions =
         $helper->subfeatures( $feature, 'mRNA', 'Sequencing Center' );
-        
+
     foreach my $prediction (@predictions) {
-        ## actually rendeding only the very first one, place for future extension
         my ($genbank_id) =
             $helper->dbxrefs( $prediction, 'Protein Accession Number' );
 
-        my $blink =
+        $output .=
             $genbank_id
             ? '<iframe' 
             . ' src="'
             . $self->app->config->{content}->{blink}->{url}
             . $genbank_id
             . '"></iframe>'
-            : '';
-
-       $self->render_text( $blink );
-    } 
+            : ''
+            if $genbank_id;
+    }
+    $self->render_text($output);
 }
 
 sub fasta {
@@ -163,6 +160,8 @@ sub fasta {
             my $db = Bio::DB::SeqFeature::Store->new(
                 -adaptor => $fasta->{sourcedb}->{adaptor},
                 -dsn     => $fasta->{sourcedb}->{dsn},
+                -user    => $fasta->{sourcedb}->{user},
+                -pass    => $fasta->{sourcedb}->{pass}
             );
             @features = $db->get_features_by_location(
                 -seqid => $reference_feature->name,
@@ -221,31 +220,46 @@ sub blast {
     my @features =
         $helper->get_features( $reference_feature, $frame, $config );
 
-    foreach my $feature (@features) {
-        ## actually rendeding only the very first one, place for future extension
-        my $protein = $helper->protein($feature);
+    my $default = $self->default( $config->{features} );
+    my $params  = {};
 
-        my $params = $config->{parameters};
-        $params->{sequence} = $protein;
+    $params->{types}  = {};
+    $params->{caller} = 'blast';
+    foreach my $feature (@features) {
+        my $protein      = $helper->protein($feature);
+        my $blast_params = $config->{parameters};
+        $blast_params->{sequence} = $protein;
 
         my $report_tx =
-            $self->client->async->post_form( $config->{report_url}, $params );
+            $self->client->async->post_form( $config->{report_url},
+            $blast_params );
         my $report = $report_tx->res->body;
         $self->render_text('error retrieving BLAST results') if !$report;
 
-        my $out =
-              '<iframe src="'
+        my $type = $feature->{type};
+        $type .= '-' . $feature->{source} if $feature->{source};
+
+        my $content =
+            $report
+            ? '<iframe src="'
             . $config->{format_report_url} . '/'
             . $report
-            . '?noheader=1"></iframe>';
-        $self->render_text($out);
+            . '?noheader=1"></iframe>'
+            : 'error retrieving BLAST results';
+
+        push @{ $params->{types}->{$type}->{content} }, $content;
+        $params->{types}->{$type}->{default} = 1 if $type eq $default;
+
     }
+    $self->render(
+        template => 'gene/subtabs',
+        %{$params}
+    );
 }
 
 sub protein {
     my ($self) = @_;
 
-    my $output            = '';
     my $helper            = $self->app->helper;
     my $config            = $self->app->config->{content}->{protein};
     my $feature           = $self->get_gene( $self->stash('id') );
@@ -255,10 +269,24 @@ sub protein {
     my @features =
         $helper->get_features( $reference_feature, $frame, $config );
 
+    my $default = $self->default( $config->{features} );
+    my $params  = {};
+
+    $params->{types}  = {};
+    $params->{caller} = 'protein';
     foreach my $feature (@features) {
-        $output .= '<pre>' . $helper->protein($feature) . '</pre><br/>';
+        ## group by type/source
+        my $type = $feature->{type};
+        $type .= '-' . $feature->{source} if $feature->{source};
+
+        push @{ $params->{types}->{$type}->{content} },
+            '<pre>' . $helper->protein($feature) . '</pre>';
+        $params->{types}->{$type}->{default} = 1 if $type eq $default;
     }
-    $self->render_text($output);
+    $self->render(
+        template => 'gene/subtabs',
+        %{$params}
+    );
 }
 
 sub curation {
@@ -273,7 +301,7 @@ sub curation {
     my @features =
         $helper->get_features( $reference_feature, $frame, $config );
 
-    my @ids = map { $helper->id($_) } @features;
+    my @ids = map { $helper->id($_) . '<br/>(' . $_->{source} .')<br/>' } @features;
 
     my $params = $config;
     $params->{id} = $self->stash('id');
@@ -346,6 +374,17 @@ sub interpro {
 }
 
 ## --- Some helpers
+sub default {
+    my ($self, $features) = @_;
+    my $default;
+    foreach my $feature (@$features) {
+        next if !$feature->{default};
+
+        $default = $feature->{type};
+        $default .= '-' . $feature->{source} if $feature->{source};
+    }
+    return $default;
+}
 
 sub frame {
     my ( $self, $feature, $padding ) = @_;
@@ -487,6 +526,8 @@ sub update {
     my @predictions =
         map { $helper->search_feature($_) }
         split( ' ', $self->req->param('feature') );
+    
+    $self->failure('No features selected') if !@predictions;
     
     my $part_of_cvterm = $self->get_cvterm( 'relationship', 'part_of' );
     my $derived_cvterm = $self->get_cvterm( 'relationship', 'derived_from' );

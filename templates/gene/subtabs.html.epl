@@ -1,0 +1,21 @@
+% my ($self) = @_; 
+
+<div id="container-<%= $self->stash('caller') %>" class="yui-navset content_tab">
+    <ul class="yui-nav">
+        <% my $types = $self->stash('types');%>
+        <% foreach my $type (keys %{ $types } ) { %>
+            <li class="<%=  $types->{$type}->{default} ? 'selected' : 1 %>">
+                <a href="<%= '#'.$type %>">
+                    <em><%= $type %></em>
+                </a>
+            </li>
+        <% } %>
+    </ul>            
+    <div class="yui-content">
+        <% foreach my $type (keys %{ $types } ) { %>
+            <div>
+                <%= join('<br/>', @{ $types->{$type}->{content}}) %>
+            </div>
+        <% } %>
+    </div>
+</div>

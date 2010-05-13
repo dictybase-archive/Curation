@@ -25,8 +25,6 @@ content:
         width : 300
         link_url : http://testdb.dictybase.org/tools/gbrowse2
         img_url  : http://testdb.dictybase.org/tools/gbrowse_img
-#        link_url : /db/cgi-bin/ggb/
-#        img_url  : /db/cgi-bin/ggb/gbrowse_img
     
     fasta:
         padding : 1000
@@ -59,12 +57,16 @@ content:
         features:
             - type   : mRNA
               source : Sequencing Center
+              default : 1
+            - type   : mRNA
+              source : geneID reprediction
+
         report_url : http://testdb.dictybase.org/tools/blast/run
         format_report_url : http://testdb.dictybase.org/tools/blast/report
         parameters :
             database : purpureum_protein.fas
             evalue : 0.1
-            filter : F
+            filter : T
             gapped : T
             limit  : 5
             matrix : BLOSUM62
@@ -127,5 +129,8 @@ content:
         features:
             - type   : mRNA
               source : Sequencing Center
+              default : 1
+            - type   : mRNA
+              source : geneID reprediction
     
 

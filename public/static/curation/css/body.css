@@ -51,6 +51,9 @@ fieldset#controls {
     list-style: none;
     padding-left: 10px;
 }
+.content-table td li{
+    padding-top: 2px;
+}
 .content-table td.title  {
     background:none repeat scroll 0 0 #DFE8F6;
     border-right:1px dotted #A3BAE9;    
@@ -160,4 +163,60 @@ a img {
 .yui-skin-sam .yui-navset .yui-nav a:focus {
     background      :#deecfd url(../images/sprite.gif) repeat-x scroll 0 -353px;
     outline         :0;
+}
+/* subtabs */
+/* nested tabs */
+.content_tab .yui-skin-sam .yui-navset .yui-nav, .yui-skin-sam .yui-navset .yui-navset-top .yui-nav {
+    border-color    :#8ea9de; /* top divider color */
+    border-style    :solid;
+    border-width    :0 0 5px; 
+    background      :#7183b1;    
+}
+.yui-skin-sam .yui-navset .content_tab .yui-nav a em,
+.yui-skin-sam .yui-navset .content_tab .yui-navset-top .yui-nav a em {
+    font-size       : 13px;
+    border          : none; /*solid #999999;*/
+    border-width    : 0px 0 0;
+    cursor          : pointer;
+/*    padding         : 0.25em .75em;*/
+    padding         : 0.25em 1.5em 0.25em .75em;
+    left            : 0; 
+    right           : 0; 
+    bottom          : 0; /* protect from other orientations */
+    top             : 0; /* for 1px rounded corners */
+    position        : relative;
+    display: inline;
+}
+.yui-skin-sam .yui-navset .content_tab .yui-nav a,
+.yui-skin-sam .yui-navset .content_tab .yui-navset-top .yui-nav a {
+    /* not-active tabs settings */
+    background      :#7183b1;
+    border          :solid #4c5e81;
+    border-width: 0px;
+    border-right-width: 1px;
+    color           :#000;
+    text-decoration :none;
+    font-weight: bold;
+}
+.yui-skin-sam .yui-navset .content_tab .yui-nav li,
+.yui-skin-sam .yui-navset .content_tab .yui-navset-top .yui-nav li {
+    margin:0;
+    padding:1px 0 0;
+}
+.yui-skin-sam .yui-navset .content_tab .yui-nav a:hover,
+.yui-skin-sam .yui-navset .content_tab .yui-nav a:focus {
+    /* tab selection */
+    background      :#9fafdf;
+    outline         :0;
+}
+.yui-skin-sam .yui-navset .content_tab .yui-nav .selected a,
+.yui-skin-sam .yui-navset .content_tab .yui-nav .selected a:focus, /* no focus effect for selected */
+.yui-skin-sam .yui-navset .content_tab .yui-nav .selected a:hover { /* no hover effect for selected */
+    /* active tab */
+    background      :#8ea9de; 
+    color           :#ecf6ad;
+    font-weight     :bold;
+}
+.yui-skin-sam .yui-navset .content_tab .yui-nav a { 
+    padding         : 0.25em 1.5em 0.25em .75em;
 }

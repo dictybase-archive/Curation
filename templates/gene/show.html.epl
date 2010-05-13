@@ -55,6 +55,8 @@
 
 <script>
     var myTabs = new YAHOO.widget.TabView("container-gene");   
+    var proteinTabs = new YAHOO.widget.TabView("container-protein");   
+var blastTabs = new YAHOO.widget.TabView("container-blast");
     YAHOO.util.Event.onDOMReady(function(){ init("<%= $self->stash('id') %>") });
 </script>
 
