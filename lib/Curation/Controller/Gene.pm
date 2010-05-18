@@ -236,9 +236,7 @@ sub blast {
         my $report = $report_tx->res->body;
         $self->render_text('error retrieving BLAST results') if !$report;
 
-        my $type = $feature->{type};
-        $type .= '-' . $feature->{source} if $feature->{source};
-
+        my $identifier = $self->identifier($feature);
         my $content =
             $report
             ? '<iframe src="'
@@ -247,8 +245,8 @@ sub blast {
             . '?noheader=1"></iframe>'
             : 'error retrieving BLAST results';
 
-        push @{ $params->{types}->{$type}->{content} }, $content;
-        $params->{types}->{$type}->{default} = 1 if $type eq $default;
+        push @{ $params->{types}->{$identifier}->{content} }, $content;
+        $params->{types}->{$identifier}->{default} = 1 if $self->identifier($feature) eq $default;
 
     }
     $self->render(
@@ -276,12 +274,12 @@ sub protein {
     $params->{caller} = 'protein';
     foreach my $feature (@features) {
         ## group by type/source
-        my $type = $feature->{type};
-        $type .= '-' . $feature->{source} if $feature->{source};
+        my $identifier = $self->identifier($feature);
 
-        push @{ $params->{types}->{$type}->{content} },
+        push @{ $params->{types}->{$identifier}->{content} },
             '<pre>' . $helper->protein($feature) . '</pre>';
-        $params->{types}->{$type}->{default} = 1 if $type eq $default;
+        $params->{types}->{$identifier}->{default} = 1
+            if $identifier eq $default;
     }
     $self->render(
         template => 'gene/subtabs',
@@ -301,11 +299,18 @@ sub curation {
     my @features =
         $helper->get_features( $reference_feature, $frame, $config );
 
-    my @ids = map { $helper->id($_) . '<br/>(' . $_->{source} .')<br/>' } @features;
-
     my $params = $config;
-    $params->{id} = $self->stash('id');
-    $params->{ids} = \@ids;
+    $params->{types} = {};
+    
+    my $default = $self->default($config->{features});
+    $self->app->log->debug($default);
+    
+    foreach my $feature (@features){
+        my $identifier = $self->identifier($feature);
+        my $id = $helper->id($feature);
+        $params->{types}->{$id}->{identifier} = $id . ' (' . $feature->{source} . ')';
+        $params->{types}->{$id}->{default} = 1 if $identifier eq $default;
+    }
     $self->render(
         template => 'gene/curation',
         %{ $params }
@@ -379,11 +384,18 @@ sub default {
     my $default;
     foreach my $feature (@$features) {
         next if !$feature->{default};
-
-        $default = $feature->{type};
-        $default .= '-' . $feature->{source} if $feature->{source};
+        $default = $self->identifier($feature);
     }
     return $default;
+}
+
+sub identifier {
+    my ($self, $feature) = @_;
+    my $identifier;
+    
+    $identifier = $feature->{type};
+    $identifier .= '-' . $feature->{source} if $feature->{source};
+    return $identifier;
 }
 
 sub frame {

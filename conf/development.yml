@@ -76,8 +76,9 @@ content:
         features:
             - type   : mRNA
               source : Sequencing Center
+              default : 1  
             - type   : mRNA
-              source : geneID reprediction
+              source : geneID reprediction            
         qualifiers:
             - type : derived from
               name : Derived from
@@ -85,6 +86,7 @@ content:
                   - Gene prediction
                   - Gene sequence
                   - Curator inference
+              default: Gene prediction
             - type : supported by
               name : Supported by
               values :

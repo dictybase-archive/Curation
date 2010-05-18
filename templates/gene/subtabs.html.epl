@@ -1,6 +1,6 @@
 % my ($self) = @_; 
 
-<div id="container-<%= $self->stash('caller') %>" class="yui-navset content_tab">
+<div id="container-<%= $self->stash('caller') %>" class="yui-navset content_tab tab">
     <ul class="yui-nav">
         <% my $types = $self->stash('types');%>
         <% foreach my $type (keys %{ $types } ) { %>

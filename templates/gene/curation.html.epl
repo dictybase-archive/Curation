@@ -3,7 +3,7 @@
     <form id="curation-form">
         <table class="content-table">
             <tr> 
-                <% if ($self->stash('ids')) {%>
+                <% if ($self->stash('types')) {%>
                     <td class="title">Features</td>
                 <% } %>
                 <% foreach my $qualifier (@{$self->stash('qualifiers')}) { %>
@@ -11,13 +11,14 @@
                 <% } %>                            
             </tr>
             <tr>
-                <% if ($self->stash('ids')) {%>
+                <% if ($self->stash('types')) {%>
                     <td>
                         <ul>
-                            <% foreach my $feature (@{$self->stash('ids')}) { %>
+                            <% foreach my $id (keys %{$self->stash('types')}) { %>
+                                <% my $value = $self->stash('types')->{$id}; %>
                                 <li>
-                                    <input class="feature" id="<%= $feature %>" type="checkbox" value="T"/>
-                                    <label for="<%= $feature %>"><%= $feature %></label>
+                                    <input class="feature" id="<%= $value->{identifier} %>" type="checkbox" value="T" <%= $value->{default} ? 'checked="T"' : ''%>/>
+                                    <label for="<%= $value->{identifier} %>"><%= $value->{identifier} %></label>
                                 </li>
                             <% } %>
                         </ul>
@@ -29,7 +30,7 @@
                             <% foreach my $value (@{ $qualifier->{'values'} }) { %>
                                 <% my $id = lc( $qualifier->{'type'} . ' ' . $value); $id =~ s/ /-/g; %>
                                 <li>
-                                    <input class="qualifier" id="<%= $id %>" type="checkbox" value="T"/>
+                                    <input class="qualifier" id="<%= $id %>" type="checkbox" value="T" <%= $value eq $qualifier->{default} ? 'checked="T"' : '' %>/>
                                     <label for="<%= $id %>"><%= $value %></label>
                                 </li>
                             <% } %>

@@ -10,7 +10,8 @@
     YAHOO.Dicty.Curation.prototype.init = function(id) {
         this.geneID = id; 
         this.autoload = 'autoload';
-        this.qualifier = 'qualifier';    
+        this.qualifier = 'qualifier'; 
+        this.tab = 'tab';   
             
         var autoloadNodes = Dom.getElementsByClassName(this.autoload);
         for (var i in autoloadNodes) {
@@ -19,6 +20,11 @@
             {
                 success: function(obj) {
                     Dom.get(obj.argument[0]).innerHTML = obj.responseText;
+                    var tabNodes = Dom.getElementsByClassName(this.tab);
+                    for (var j in tabNodes){
+                        new YAHOO.widget.TabView(tabNodes[j].id);
+                        Dom.removeClass(tabNodes[j], this.tab);
+                    }
                 },
                 failure: this.onFailure,
                 scope: this,

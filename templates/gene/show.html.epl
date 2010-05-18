@@ -1,7 +1,7 @@
 % my ($self, $c) = @_;
 % $self->stash(layout => 'default');
 
-<div id="container-gene" class="yui-navset">
+<div id="container-gene" class="yui-navset tab">
     <ul class="yui-nav">
         <% if ($self->stash('gbrowse') || $self->stash('fasta')) {%>
             <li class="selected"><a href="#gbrowse"><em>GBrowse</em></a></li>
@@ -54,9 +54,6 @@
 </div>
 
 <script>
-    var myTabs = new YAHOO.widget.TabView("container-gene");   
-    var proteinTabs = new YAHOO.widget.TabView("container-protein");   
-var blastTabs = new YAHOO.widget.TabView("container-blast");
     YAHOO.util.Event.onDOMReady(function(){ init("<%= $self->stash('id') %>") });
 </script>
 

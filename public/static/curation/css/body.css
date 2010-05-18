@@ -178,8 +178,7 @@ a img {
     border          : none; /*solid #999999;*/
     border-width    : 0px 0 0;
     cursor          : pointer;
-/*    padding         : 0.25em .75em;*/
-    padding         : 0.25em 1.5em 0.25em .75em;
+    padding         : 3px 4px;
     left            : 0; 
     right           : 0; 
     bottom          : 0; /* protect from other orientations */
@@ -218,5 +217,5 @@ a img {
     font-weight     :bold;
 }
 .yui-skin-sam .yui-navset .content_tab .yui-nav a { 
-    padding         : 0.25em 1.5em 0.25em .75em;
+    padding         :3px 4px;
 }
