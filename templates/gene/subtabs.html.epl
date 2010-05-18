@@ -3,7 +3,7 @@
 <div id="container-<%= $self->stash('caller') %>" class="yui-navset content_tab tab">
     <ul class="yui-nav">
         <% my $types = $self->stash('types');%>
-        <% foreach my $type (keys %{ $types } ) { %>
+        <% foreach my $type (@{ $self->stash('order') }) { %>
             <li class="<%=  $types->{$type}->{default} ? 'selected' : 1 %>">
                 <a href="<%= '#'.$type %>">
                     <em><%= $type %></em>
@@ -12,7 +12,7 @@
         <% } %>
     </ul>            
     <div class="yui-content">
-        <% foreach my $type (keys %{ $types } ) { %>
+        <% foreach my $type (@{ $self->stash('order') }) { %>
             <div>
                 <%= join('<br/>', @{ $types->{$type}->{content}}) %>
             </div>

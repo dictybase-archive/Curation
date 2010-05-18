@@ -58,8 +58,10 @@ content:
             - type   : mRNA
               source : Sequencing Center
               default : 1
+              title : Sequencing center model
             - type   : mRNA
               source : geneID reprediction
+              title: geneID reprediction
 
         report_url : http://testdb.dictybase.org/tools/blast/run
         format_report_url : http://testdb.dictybase.org/tools/blast/report
@@ -77,8 +79,10 @@ content:
             - type   : mRNA
               source : Sequencing Center
               default : 1  
+              title : Sequencing center model
             - type   : mRNA
-              source : geneID reprediction            
+              source : geneID reprediction  
+              title :  geneID reprediction         
         qualifiers:
             - type : derived from
               name : Derived from
@@ -132,7 +136,9 @@ content:
             - type   : mRNA
               source : Sequencing Center
               default : 1
+              title : Sequencing center model
             - type   : mRNA
               source : geneID reprediction
+              title : geneID reprediction
     
 

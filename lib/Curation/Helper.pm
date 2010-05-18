@@ -227,25 +227,28 @@ sub protein {
 }
 
 sub get_features {
-    my ($self, $reference_feature, $frame, $config) = @_;
-    
+    my ( $self, $reference_feature, $frame, $config ) = @_;
+
     my @filtered_features;
     my @all_features =
         $self->splice_features( $reference_feature, $frame->{start} - 1,
         $frame->{end} );
-    
+
     foreach my $feature ( @{ $config->{features} } ) {
-        my $type = $feature->{type};
+        my $type   = $feature->{type};
         my $source = $feature->{source} || undef;
-    
+        my $title  = $feature->{title} || undef;
+
         my @features = $self->filter_by_type( \@all_features, $type );
         @features = $self->filter_by_source( \@features, $source )
-            if $source; 
-        map {$_->{type} = $type} @features;
-        map {$_->{source} = $source} @features if $source;
+            if $source;
+        map { $_->{type} = $type } @features;
+        map { $_->{source} = $source } @features if $source;
+        map { $_->{title} = $title } @features if $title;
         push @filtered_features, @features;
     }
     return @filtered_features;
 }
+
 
 1;

@@ -222,9 +222,10 @@ sub blast {
 
     my $default = $self->default( $config->{features} );
     my $params  = {};
-
     $params->{types}  = {};
     $params->{caller} = 'blast';
+    $params->{order}  = [];
+
     foreach my $feature (@features) {
         my $protein      = $helper->protein($feature);
         my $blast_params = $config->{parameters};
@@ -244,9 +245,12 @@ sub blast {
             . $report
             . '?noheader=1"></iframe>'
             : 'error retrieving BLAST results';
-
+            
+        push @{ $params->{order} }, $identifier if !exists $params->{types}->{$identifier};
         push @{ $params->{types}->{$identifier}->{content} }, $content;
-        $params->{types}->{$identifier}->{default} = 1 if $self->identifier($feature) eq $default;
+        
+        $params->{types}->{$identifier}->{default} = 1
+            if $self->identifier($feature) eq $default;
 
     }
     $self->render(
@@ -254,6 +258,7 @@ sub blast {
         %{$params}
     );
 }
+
 
 sub protein {
     my ($self) = @_;
@@ -269,22 +274,22 @@ sub protein {
 
     my $default = $self->default( $config->{features} );
     my $params  = {};
-
     $params->{types}  = {};
     $params->{caller} = 'protein';
+    $params->{order}  = [];
+
     foreach my $feature (@features) {
         ## group by type/source
         my $identifier = $self->identifier($feature);
 
+        push @{ $params->{order} }, $identifier if !exists $params->{types}->{$identifier};
         push @{ $params->{types}->{$identifier}->{content} },
             '<pre>' . $helper->protein($feature) . '</pre>';
+
         $params->{types}->{$identifier}->{default} = 1
             if $identifier eq $default;
     }
-    $self->render(
-        template => 'gene/subtabs',
-        %{$params}
-    );
+    $self->render( template => 'gene/subtabs', %{$params} );
 }
 
 sub curation {
@@ -308,7 +313,7 @@ sub curation {
     foreach my $feature (@features){
         my $identifier = $self->identifier($feature);
         my $id = $helper->id($feature);
-        $params->{types}->{$id}->{identifier} = $id . ' (' . $feature->{source} . ')';
+        $params->{types}->{$id}->{identifier} = $id . ' (' . $identifier . ')';
         $params->{types}->{$id}->{default} = 1 if $identifier eq $default;
     }
     $self->render(
@@ -392,6 +397,8 @@ sub default {
 sub identifier {
     my ($self, $feature) = @_;
     my $identifier;
+    
+    return $feature->{title} if $feature->{title};
     
     $identifier = $feature->{type};
     $identifier .= '-' . $feature->{source} if $feature->{source};

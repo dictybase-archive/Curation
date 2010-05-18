@@ -17,7 +17,7 @@
                             <% foreach my $id (keys %{$self->stash('types')}) { %>
                                 <% my $value = $self->stash('types')->{$id}; %>
                                 <li>
-                                    <input class="feature" id="<%= $value->{identifier} %>" type="checkbox" value="T" <%= $value->{default} ? 'checked="T"' : ''%>/>
+                                    <input class="feature" id="<%= $value->{identifier} %>" type="radio" value="T" name="feature" <%= $value->{default} ? 'checked="checked"' : ''%>/>
                                     <label for="<%= $value->{identifier} %>"><%= $value->{identifier} %></label>
                                 </li>
                             <% } %>
