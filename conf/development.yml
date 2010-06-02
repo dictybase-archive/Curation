@@ -47,9 +47,11 @@ content:
             - type   : RNAseq
               style  : UPPERCASE
               sourcedb : 
-                  dsn : /home/ubuntu/dictyBase/Apps/curation/db/rnaseq.sqlite
-                  adaptor : DBI::SQLite
-    
+                  dsn : dbi:mysql:host=192.168.4.53;database=seqfeature
+                  adaptor : DBI::mysql
+                  user : caboose
+                  pass : gmodmaster
+ 
     blink :
         url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=
     
@@ -81,8 +83,8 @@ content:
               default : 1  
               title : Sequencing center model
             - type   : mRNA
-              source : geneID reprediction  
-              title :  geneID reprediction         
+              source : geneID reprediction
+              title: geneID reprediction            
         qualifiers:
             - type : derived from
               name : Derived from
@@ -139,6 +141,6 @@ content:
               title : Sequencing center model
             - type   : mRNA
               source : geneID reprediction
-              title : geneID reprediction
+              title :  geneID reprediction
     
 
