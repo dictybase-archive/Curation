@@ -92,7 +92,7 @@ content:
                   - gene prediction
                   - gene sequence
                   - curator inference
-              default: Gene prediction
+              default: gene prediction
             - type : supported by
               name : Supported by
               values :
