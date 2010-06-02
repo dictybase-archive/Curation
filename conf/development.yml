@@ -89,17 +89,17 @@ content:
             - type : derived from
               name : Derived from
               values: 
-                  - Gene prediction
-                  - Gene sequence
-                  - Curator inference
+                  - gene prediction
+                  - gene sequence
+                  - curator inference
               default: Gene prediction
             - type : supported by
               name : Supported by
               values :
-                  - EST
-                  - Sequence similarity
-                  - Genomic context
-                  - Unpublished transcript sequence
+                  - ESTs
+                  - sequence similarity
+                  - genomic context
+                  - unpublished transcript sequence
             - type : qualifier
               name : Notes
               values: 

@@ -83,7 +83,7 @@
         postData);
     };
     YAHOO.Dicty.Curation.prototype.onFailure = function(obj) {
-        alert(obj.statusText);
+        //alert(obj.statusText);
     };
 })();
 
