@@ -48,7 +48,7 @@ sub create {
 
     $self->redirect_to('/curation/login') if !$initials;
         
-    $self->session( initials => $initials, username => $username, expires => 0 );
+    $self->session( initials => $initials, username => $username);
     $self->redirect_to('/curation/');
 }
 

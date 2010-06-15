@@ -31,7 +31,10 @@ sub startup {
 
     ##### does not work?
     #Note that you should use a custom secret to make signed cookies really secure.
-    $self->secret('My secret passphrase here!');
+    $self->secret('dicty4ever');
+    $self->session->cookie_path('/curation');
+    $self->session->cookie_name('/dictybasecuration');
+    $self->session->default_expiration(18000);
     
     # Routes
     my $router = $self->routes;
