@@ -5,7 +5,7 @@
         <% my $types = $self->stash('types');%>
         <% foreach my $type (@{ $self->stash('order') }) { %>
             <li class="<%=  $types->{$type}->{default} ? 'selected' : 1 %>">
-                <a href="<%= '#'.$type %>">
+                <a href="<%= '#'.$self->stash('caller').'-'.$type %>">
                     <em><%= $type %></em>
                 </a>
             </li>

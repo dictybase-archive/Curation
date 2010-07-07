@@ -66,13 +66,31 @@ content:
         report_url : http://testdb.dictybase.org/tools/blast/run
         format_report_url : http://testdb.dictybase.org/tools/blast/report
         parameters :
-            database : purpureum_protein.fas
-            evalue : 0.1
-            filter : T
-            gapped : T
-            limit  : 5
-            matrix : BLOSUM62
-            program : blastp
+            - database : purpureum_protein.fas
+              name : D.purpureum
+              evalue : 0.1
+              filter : T
+              gapped : T
+              limit  : 5
+              matrix : BLOSUM62
+              program : blastp
+              default : 1
+            - database : fasciculatum_protein.fas
+              name: D.fasciculatum
+              evalue : 0.1
+              filter : T
+              gapped : T
+              limit  : 5
+              matrix : BLOSUM62
+              program : blastp
+            - database : pallidum_protein.fas
+              name : P.pallidum
+              evalue : 0.1
+              filter : T
+              gapped : T
+              limit  : 5
+              matrix : BLOSUM62
+              program : blastp                    
     
     curation:
         features:
