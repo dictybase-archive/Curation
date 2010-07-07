@@ -20,7 +20,7 @@ __PACKAGE__->attr('soap');
 # Module implementation
 #
 sub index {
-    my ( $self ) = @_;
+    my ($self) = @_;
 }
 
 sub show {
@@ -28,7 +28,10 @@ sub show {
     my $helper = $self->app->helper;
 
     my $gene = $self->get_gene( $self->stash('id') );
-    $self->render( template => 'gene/show', %{$self->app->config->{content}} );
+    $self->render(
+        template => 'gene/show',
+        %{ $self->app->config->{content} }
+    );
 }
 
 ## --- Display part
@@ -108,7 +111,7 @@ sub fasta {
     my $helper  = $self->app->helper;
     my $feature = $self->get_gene( $self->stash('id') );
     my $flip    = $helper->is_flipped($feature);
-    my $frame   = $self->frame($feature, $config->{padding});
+    my $frame   = $self->frame( $feature, $config->{padding} );
 
     ## get genomic sequence of a region ( make sure to address interbase coordinates )
     my $reference_feature  = $helper->reference_feature($feature);
@@ -210,6 +213,33 @@ sub fasta {
 sub blast {
     my ($self) = @_;
 
+    my $result = '';
+    my $helper = $self->app->helper;
+    my $config = $self->app->config->{content}->{blast};
+
+    my $params = {};
+    $params->{types}  = {};
+    $params->{caller} = 'blast';
+    $params->{order}  = [];
+
+    foreach my $blast_params ( @{ $config->{parameters} } ) {
+        my $database = $blast_params->{name};
+        push @{ $params->{order} }, $database
+            if !exists $params->{types}->{$database};
+
+        push @{ $params->{types}->{$database}->{content} },
+            $self->blast_database($blast_params->{database});
+        $params->{types}->{$database}->{default} = 1 if $blast_params->{default} == 1;
+    }
+    $self->render(
+        template => 'gene/subtabs',
+        %{$params}
+    );
+}
+
+sub blast_database {
+    my ( $self, $database ) = @_;
+
     my $result            = '';
     my $helper            = $self->app->helper;
     my $config            = $self->app->config->{content}->{blast};
@@ -223,42 +253,45 @@ sub blast {
     my $default = $self->default( $config->{features} );
     my $params  = {};
     $params->{types}  = {};
-    $params->{caller} = 'blast';
+    $params->{caller} = 'blast-'.$database;
     $params->{order}  = [];
 
-    foreach my $feature (@features) {
-        my $protein      = $helper->protein($feature);
-        my $blast_params = $config->{parameters};
-        $blast_params->{sequence} = $protein;
+    foreach my $blast_params ( @{ $config->{parameters} } ) {
+        next if $blast_params->{database} ne $database;
 
-        my $report_tx =
-            $self->client->async->post_form( $config->{report_url},
-            $blast_params );
-        my $report = $report_tx->res->body;
-        $self->render_text('error retrieving BLAST results') if !$report;
+        foreach my $feature (@features) {
+            my $protein = $helper->protein($feature);
+            $blast_params->{sequence} = $protein;
 
-        my $identifier = $self->identifier($feature);
-        my $content =
-            $report
-            ? '<iframe src="'
-            . $config->{format_report_url} . '/'
-            . $report
-            . '?noheader=1"></iframe>'
-            : 'error retrieving BLAST results';
-            
-        push @{ $params->{order} }, $identifier if !exists $params->{types}->{$identifier};
-        push @{ $params->{types}->{$identifier}->{content} }, $content;
-        
-        $params->{types}->{$identifier}->{default} = 1
-            if $self->identifier($feature) eq $default;
+            my $report_tx =
+                $self->client->async->post_form( $config->{report_url},
+                $blast_params );
+            my $report = $report_tx->res->body;
+            $self->render_text('error retrieving BLAST results')
+                if !$report || $report =~ m{Sorry}i;
 
+            my $identifier = $self->identifier($feature);
+            my $content =
+                $report
+                ? '<iframe src="'
+                . $config->{format_report_url} . '/'
+                . $report
+                . '?noheader=1"></iframe>'
+                : 'error retrieving BLAST results';
+
+            push @{ $params->{order} }, $identifier
+                if !exists $params->{types}->{$identifier};
+            push @{ $params->{types}->{$identifier}->{content} }, $content;
+
+            $params->{types}->{$identifier}->{default} = 1
+                if $self->identifier($feature) eq $default;
+        }
     }
-    $self->render(
+    return $self->render_partial(
         template => 'gene/subtabs',
         %{$params}
     );
 }
-
 
 sub protein {
     my ($self) = @_;
@@ -282,7 +315,8 @@ sub protein {
         ## group by type/source
         my $identifier = $self->identifier($feature);
 
-        push @{ $params->{order} }, $identifier if !exists $params->{types}->{$identifier};
+        push @{ $params->{order} }, $identifier
+            if !exists $params->{types}->{$identifier};
         push @{ $params->{types}->{$identifier}->{content} },
             '<pre>' . $helper->protein($feature) . '</pre>';
 
@@ -294,7 +328,7 @@ sub protein {
 
 sub curation {
     my ($self) = @_;
-    
+
     my $helper            = $self->app->helper;
     my $config            = $self->app->config->{content}->{curation};
     my $feature           = $self->get_gene( $self->stash('id') );
@@ -306,36 +340,38 @@ sub curation {
 
     my $params = $config;
     $params->{types} = {};
-    
-    my $default = $self->default($config->{features});
+
+    my $default = $self->default( $config->{features} );
     $self->app->log->debug($default);
-    
-    foreach my $feature (@features){
+
+    foreach my $feature (@features) {
         my $identifier = $self->identifier($feature);
-        my $id = $helper->id($feature);
-        $params->{types}->{$id}->{identifier} = $id . ' (' . $identifier . ')';
+        my $id         = $helper->id($feature);
+        $params->{types}->{$id}->{identifier} =
+            $id . ' (' . $identifier . ')';
         $params->{types}->{$id}->{default} = 1 if $identifier eq $default;
     }
     $self->render(
         template => 'gene/curation',
-        %{ $params }
+        %{$params}
     );
 }
 
 ### TODO
 sub interpro {
     my ( $self, $feature ) = @_;
-    
+
     my $output = '';
-    
+
     my $config = $self->app->config->{interpro};
     my $helper = $self->app->helper;
-    
-    my $soap = SOAP::Lite->service($config->{wdsl});
+
+    my $soap = SOAP::Lite->service( $config->{wdsl} );
     $soap->proxy( $config->{proxy}, timeout => $config->{timeout} );
     $soap->on_fault(
         sub {
             my ( $soap, $res ) = @_;
+
             # Throw an exception for all faults
             $self->app->log->error($res) if ref($res) eq '';
             $self->app->log->error( $res->faultstring );
@@ -343,49 +379,54 @@ sub interpro {
         }
     );
     $self->soap($soap);
-    
+
     my $params = {    # Parameters to pass to service
-        'app'       => join(' ', @{$config->{apps}}),
-        'seqtype'   => 'p',
-        'async'     => 1,    # Use InterproScan in async mode, simulate sync mode in client
-        'email'     => 'y-bushmanova@northwestern.edu'
+        'app'     => join( ' ', @{ $config->{apps} } ),
+        'seqtype' => 'p',
+        'async' =>
+            1,  # Use InterproScan in async mode, simulate sync mode in client
+        'email' => 'y-bushmanova@northwestern.edu'
     };
 
     my $async = 1;
-    
-    my $reference_feature  = $helper->reference_feature($feature);
-    my @features =
-        $helper->splice_features( $reference_feature, $helper->start($feature) - 1,
-        $helper->end($feature) );
-    
+
+    my $reference_feature = $helper->reference_feature($feature);
+    my @features          = $helper->splice_features(
+        $reference_feature,
+        $helper->start($feature) - 1,
+        $helper->end($feature)
+    );
+
     foreach my $feature ( @{ $self->app->config->{interpro}->{features} } ) {
         my $type = $feature->{type};
         my $source = $feature->{source} || undef;
-        
+
         my @features = $helper->filter_by_type( \@features, $type );
         @features = $helper->filter_by_source( \@features, $source )
             if $source;
-        
+
         my @proteins = map { $helper->protein($_) } @features;
         return 'No protein data available' if !@proteins;
-        
-        foreach my $protein (@proteins){
+
+        foreach my $protein (@proteins) {
             my $contents = [ { type => 'sequence', content => $protein } ];
             my $job_id = $self->submit_job( $contents, $params, $async );
             $self->app->log->error('Error submitting job') if !$job_id;
-            
-            $output .= '<span class=interpro pending>' . $job_id . '</span><br/>';
+
+            $output .=
+                '<span class=interpro pending>' . $job_id . '</span><br/>';
         }
     }
     return $output;
-#    $self->client_poll($job_id);
-#    my $results = $self->get_results($job_id);
-#    return $self->format_results($results);
+
+    #    $self->client_poll($job_id);
+    #    my $results = $self->get_results($job_id);
+    #    return $self->format_results($results);
 }
 
 ## --- Some helpers
 sub default {
-    my ($self, $features) = @_;
+    my ( $self, $features ) = @_;
     my $default;
     foreach my $feature (@$features) {
         next if !$feature->{default};
@@ -395,11 +436,11 @@ sub default {
 }
 
 sub identifier {
-    my ($self, $feature) = @_;
+    my ( $self, $feature ) = @_;
     my $identifier;
-    
+
     return $feature->{title} if $feature->{title};
-    
+
     $identifier = $feature->{type};
     $identifier .= '-' . $feature->{source} if $feature->{source};
     return $identifier;
@@ -438,15 +479,15 @@ sub frame_coordinates {
         $f_end   = $frame->{length} - $start + 1;
         return { start => $f_start, end => $f_end };
     }
-    
+
     return if $start && $end == 0;
     return { start => $start, end => $end };
 }
 
 #interpro todo
 sub submit_job {
-    my ($self, $contents, $params, $async ) = @_;
-    
+    my ( $self, $contents, $params, $async ) = @_;
+
     my $soap = $self->soap;
     my $job_id;
 
@@ -479,7 +520,7 @@ sub submit_job {
 sub client_poll {
     my ( $self, $job_id ) = @_;
     my $completed = 0;
-    
+
     while ( $completed ne 1 ) {
         my $status = $self->soap->checkStatus($job_id);
         $completed++ if $status !~ m{running|pending}i;
@@ -520,34 +561,35 @@ sub update {
 
     my $id               = $self->stash('id');
     my $curator_initials = $self->session('initials');
-    
+
     ## get curation parameters from request parameters
     ## this requires parameter name being formed in a particular way
-    ## View forms id of each control element (checkboxes) as a composition 
-    ## of lowercased qualifier type and value (i.e. derived-from-gene-prediction, supported-by-est). 
+    ## View forms id of each control element (checkboxes) as a composition
+    ## of lowercased qualifier type and value (i.e. derived-from-gene-prediction, supported-by-est).
     ## JS sends request to service using those ids as request parameters for selected qualifiers
     ## Controller checks if request contains expected parameter.
-    
-    my $config = $self->app->config->{content}->{curation};
+
+    my $config     = $self->app->config->{content}->{curation};
     my $qualifiers = {};
-    
+
     foreach my $qualifier ( @{ $config->{qualifiers} } ) {
-        foreach my $value ( @{ $qualifier->{values} } ){
-            my $id = lc( $qualifier->{type} . ' ' . $value); 
-            $id =~ s/ /-/g; 
-            push @{$qualifiers->{$qualifier->{type}}}, $value if $self->req->param($id);
+        foreach my $value ( @{ $qualifier->{values} } ) {
+            my $id = lc( $qualifier->{type} . ' ' . $value );
+            $id =~ s/ /-/g;
+            push @{ $qualifiers->{ $qualifier->{type} } }, $value
+                if $self->req->param($id);
         }
     }
-    
+
     my $gene = $self->get_gene($id);
     $self->prune_models($gene);
 
     my @predictions =
         map { $helper->search_feature($_) }
         split( ' ', $self->req->param('feature') );
-    
+
     $self->failure('No features selected') if !@predictions;
-    
+
     my $part_of_cvterm = $self->get_cvterm( 'relationship', 'part_of' );
     my $derived_cvterm = $self->get_cvterm( 'relationship', 'derived_from' );
     my $mrna_cvterm    = $self->get_cvterm( 'sequence',     'mRNA' );
@@ -555,7 +597,7 @@ sub update {
     my $organism = $helper->organism($gene);
     my $prefix =
         $self->app->config->{organism}->{ $organism->species }->{prefix};
-    my $schema = 'cgm_ddb'; #dicty::DBH->schema;
+    my $schema = 'cgm_ddb';    #dicty::DBH->schema;
 
     foreach my $prediction (@predictions) {
         my $number = $dbh->selectcol_arrayref(
@@ -612,7 +654,7 @@ sub update {
             {   type_id   => $part_of_cvterm->cvterm_id,
                 object_id => $prediction->feature_id,
             }
-        );
+            );
         $self->failure("No exons found for $id") if !@prediction_exons;
 
         foreach my $prediction_exon (@prediction_exons) {
@@ -716,11 +758,12 @@ sub update {
 }
 
 sub prune_models {
-    my ($self, $gene) = @_;
+    my ( $self, $gene ) = @_;
     eval {
-        my $part_of_cvterm = $self->get_cvterm('relationship','part_of');
-        my $derived_cvterm = $self->get_cvterm( 'relationship', 'derived_from' );
-        
+        my $part_of_cvterm = $self->get_cvterm( 'relationship', 'part_of' );
+        my $derived_cvterm =
+            $self->get_cvterm( 'relationship', 'derived_from' );
+
         my @models = grep {
             Chado::Feature_Dbxref->search(
                 {   feature_id => $_->feature_id,
@@ -730,7 +773,9 @@ sub prune_models {
                 }
                 )
             }
-            grep { $_->type == $self->get_cvterm('sequence','mRNA')->cvterm_id }
+            grep {
+            $_->type == $self->get_cvterm( 'sequence', 'mRNA' )->cvterm_id
+            }
             map {
             Chado::Feature->get_single_row( { feature_id => $_->subject_id } )
             }
@@ -749,9 +794,9 @@ sub prune_models {
                     object_id => $model->feature_id
                 }
                 );
-            $protein->is_deleted(1); 
+            $protein->is_deleted(1);
             $protein->update;
-            
+
             my @exons = map {
                 Chado::Feature->get_single_row(
                     { feature_id => $_->subject_id } )
@@ -854,7 +899,7 @@ sub exception {
 }
 
 sub failure {
-    my ($self, $message) = @_;
+    my ( $self, $message ) = @_;
     $self->app->dbh->rollback;
     $self->render(
         template => 'gene/update',
