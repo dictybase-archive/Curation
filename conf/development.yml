@@ -32,15 +32,15 @@ content:
             - type   : mRNA
               source : Sequencing Center
               style  : FGCOLOR red
-              subfeature : CDS
+              subfeature : exon
             - type   : mRNA
               source : geneID reprediction
               style  : FGCOLOR blue
-              subfeature : CDS
+              subfeature : exon
             - type   : mRNA
               source : dictyBase Curator
               style  : BGCOLOR yellow
-              subfeature : CDS
+              subfeature : exon
             - type   : EST
               style  : text-decoration: underline
               subfeature : nucleotide_match
