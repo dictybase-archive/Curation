@@ -5,6 +5,7 @@ use YAML;
 use DBI;
 use Getopt::Long;
 use File::Spec::Functions;
+use local::lib '/home/ubuntu/dictyBase/Libs/GB2';
 
 my ( $help, $filename);
 
@@ -37,6 +38,6 @@ $dbh->do($create_sql) or die "DBI::str for $create_sql";
 
 my $user_insert_sql = 'INSERT INTO users (name, password, initials) values (?,?,?);';
 my $sth = $dbh->prepare($user_insert_sql);
-$sth->execute('PFEY', 'PFEY12345', 'PF');
+$sth->execute('CGM_DDB_PFEY', 'tul2um4', 'PF');
 $sth->execute('PGAUDET', 'PGAUDET12345', 'PG');
 $sth->execute('RDDODSON', 'RDODSON12345', 'RD');
