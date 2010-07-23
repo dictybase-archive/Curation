@@ -1,11 +1,11 @@
 #!/usr/bin/perl 
 
 use strict;
-use YAML;
 use DBI;
 use Getopt::Long;
 use File::Spec::Functions;
 use local::lib '/home/ubuntu/dictyBase/Libs/GB2';
+use YAML;
 
 my ( $help, $filename);
 
