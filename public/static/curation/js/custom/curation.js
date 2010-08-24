@@ -81,6 +81,8 @@
             scope: this
         },
         postData);
+    
+        YAHOO.util.Connect.asyncRequest('DELETE', '/cache/gene/' + this.geneID);
     };
     YAHOO.Dicty.Curation.prototype.onFailure = function(obj) {
         //alert(obj.statusText);

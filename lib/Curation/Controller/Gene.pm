@@ -228,8 +228,9 @@ sub blast {
             if !exists $params->{types}->{$database};
 
         push @{ $params->{types}->{$database}->{content} },
-            $self->blast_database($blast_params->{database});
-        $params->{types}->{$database}->{default} = 1 if $blast_params->{default} == 1;
+            $self->blast_database( $blast_params->{database} );
+        $params->{types}->{$database}->{default} = 1
+            if $blast_params->{default} && $blast_params->{default} == 1;
     }
     $self->render(
         template => 'gene/subtabs',
@@ -253,7 +254,7 @@ sub blast_database {
     my $default = $self->default( $config->{features} );
     my $params  = {};
     $params->{types}  = {};
-    $params->{caller} = 'blast-'.$database;
+    $params->{caller} = 'blast-' . $database;
     $params->{order}  = [];
 
     foreach my $blast_params ( @{ $config->{parameters} } ) {
@@ -755,6 +756,7 @@ sub update {
     };
     $self->failure( 'Error adding paragraph: ' . $@ ) if $@;
     $dbh->commit;
+    $self->clean_cache($id);
 }
 
 sub prune_models {
@@ -908,4 +910,12 @@ sub failure {
     );
 }
 
+sub clean_cache {
+    my ( $self, $id ) = @_;
+    my $config = $self->app->config;
+    
+#    my $tx = $self->client->delete( $config->{cache}->{cleanup_url} . $id );
+#    my $report = $tx->res->message;
+#    $self->app->log->debug($report);
+}
 1;
