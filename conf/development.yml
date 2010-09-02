@@ -51,7 +51,10 @@ content:
                   adaptor : DBI::mysql
                   user : caboose
                   pass : gmodmaster
- 
+            - type   : pseudogene
+              style  : BGCOLOR lightgrey
+              subfeature : pseudogenic_exon
+
     blink :
         url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=
     
