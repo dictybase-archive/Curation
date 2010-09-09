@@ -31,6 +31,7 @@
         <script type="text/javascript" src="/static/curation/js/yui//build/element/element-beta-min.js"></script>
         <script type="text/javascript" src="/static/curation/js/yui/build/button/button-min.js"></script>
         <script type="text/javascript" src="/static/curation/js/yui/build/logger/logger-min.js"></script>
+        <script type="text/javascript" src="/static/curation/js/custom/gene.js"></script>
         <script type="text/javascript" src="/static/curation/js/custom/curation.js"></script>
         <script type="text/javascript" src="/static/curation/js/custom/menu.js"></script>   
         <!-- Source file for TabView -->
@@ -54,7 +55,8 @@
                 
                 <% }%>
                 <%= 'Logged in as ' . $self->session('username') %> | 
-                <a href="/curation/logout">Logout</a>
+                <a href="/curation/logout">Logout</a> | 
+                <a href="/curation">Home</a>
             </div>
         <% }%>
         <%= $self->render_inner %>

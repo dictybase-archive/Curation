@@ -10,7 +10,7 @@ use base 'Mojolicious::Controller';
 #
 sub index {
     my ($self, $c) = @_;
-    $self->redirect_to('/curation/genes');
+   # $self->redirect_to('/curation/genes');
 }
 
 1;

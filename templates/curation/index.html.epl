@@ -1,1 +1,28 @@
-% shift->stash(layout => 'default');
+% my ($self) = @_;
+% $self->stash(layout => 'default');
+% 
+<div id="container-blank">
+    <table>
+        <tr>
+            <td>
+                Curate gene
+            </td>
+            <td>
+                <input id="gene-id"/>
+                <span id="curation-gene"/></span>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                Create PubMed reference
+            </td>
+            <td>
+                <input id="pubmed-id"/>
+                <span id="curation-reference"/></span>
+            </td>
+        </tr>
+    </table>
+</div>
+<script>
+    YAHOO.util.Event.onDOMReady(function(){ initCuration() });
+</script>

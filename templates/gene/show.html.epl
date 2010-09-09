@@ -54,6 +54,6 @@
 </div>
 
 <script>
-    YAHOO.util.Event.onDOMReady(function(){ init("<%= $self->stash('id') %>") });
+    YAHOO.util.Event.onDOMReady(function(){ initGeneCuration("<%= $self->stash('id') %>") });
 </script>
 

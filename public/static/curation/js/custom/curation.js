@@ -2,94 +2,91 @@
     YAHOO.namespace('Dicty');
     var Dom = YAHOO.util.Dom;
     var Event = YAHOO.util.Event;
-    
+
     YAHOO.Dicty.Curation = function() {
-//        var logger = new YAHOO.widget.LogReader();
+        var logger = new YAHOO.widget.LogReader();
     };
 
-    YAHOO.Dicty.Curation.prototype.init = function(id) {
-        this.geneID = id; 
-        this.autoload = 'autoload';
-        this.qualifier = 'qualifier'; 
-        this.tab = 'tab';   
-            
-        var autoloadNodes = Dom.getElementsByClassName(this.autoload);
-        for (var i in autoloadNodes) {
-            var args = [autoloadNodes[i].id];
-            YAHOO.util.Connect.asyncRequest('GET', '/curation/gene/' + this.geneID + '/' + autoloadNodes[i].id,
-            {
-                success: function(obj) {
-                    Dom.get(obj.argument[0]).innerHTML = obj.responseText;
-                    var tabNodes = Dom.getElementsByClassName(this.tab);
-                    for (var j in tabNodes){
-                        new YAHOO.widget.TabView(tabNodes[j].id);
-                        Dom.removeClass(tabNodes[j], this.tab);
-                    }
-                },
-                failure: this.onFailure,
-                scope: this,
-                argument : args
-            });
-        }
-            
-        this.curationApproveButtonEl = 'curation-approve';
+    YAHOO.Dicty.Curation.prototype.init = function() {
+        this.geneIDEl = Dom.get('gene-id');
+        this.referenceIDEl = Dom.get('pubmed-id');
+        this.curationReferenceButtonEl = 'curation-reference';
+        this.curationGeneButtonEl = 'curation-gene';
+
+        this.helpPanel = new YAHOO.widget.Panel("helpPanel", {
+            width: "500px",
+            visible: true,
+            modal: true,
+            fixedcenter: true,
+            zIndex: 3,
+            visible: false
+        });
         
-        this.curationApproveButton = new YAHOO.widget.Button({
-            container: this.curationApproveButtonEl,
-            label: 'Approve',
+        this.curationGeneButton = new YAHOO.widget.Button({
+            container: this.curationGeneButtonEl,
+            label: 'Curate',
             type: 'button',
-            id: 'curation-approve',
+            id: 'curation-gene-button',
             onclick: {
-                fn: function(){ this.curate(); },
+                fn: function() {
+                    var valid = this.validateInput(this.geneIDEl.value);
+                    if (valid) { this.curateGene(this.geneIDEl.value); }
+                },
+                scope: this
+            }
+        });
+
+        this.curationReferenceButton = new YAHOO.widget.Button({
+            container: this.curationReferenceButtonEl,
+            label: 'Create',
+            type: 'button',
+            id: 'curation-reference-button',
+            onclick: {
+                fn: function() {
+                    var valid = this.validateInput(this.referenceIDEl.value);
+                    if (valid) { this.curateReference(this.referenceIDEl.value); }
+                },
                 scope: this
             }
         });
     };
-    YAHOO.Dicty.Curation.prototype.curate = function() {
-        var postData = '';
-        var qualifierNodes = Dom.getElementsByClassName( 'qualifier' );
-        var featureNodes   = Dom.getElementsByClassName( 'feature' );
-        
-        for (var i in qualifierNodes) {     
-            if (qualifierNodes[i].checked){
-                postData += qualifierNodes[i].id + '=' + 1 + '&';
-            }
-        }
-        var featuresPost = '';
-        for (var i in featureNodes) {     
-            if (featureNodes[i].checked){
-                featuresPost += featureNodes[i].id + '+';
-            }
-        }
-        postData = postData + 'feature=' + featuresPost;
 
-        YAHOO.util.Connect.asyncRequest('POST', '/curation/gene/' + this.geneID + '/update/',
+    YAHOO.Dicty.Curation.prototype.curateGene = function(id) {
+        location.replace('/curation/gene/' + id);
+        return false;
+        
+    };
+    YAHOO.Dicty.Curation.prototype.curateReference = function(id) {
+        YAHOO.util.Connect.asyncRequest('POST', '/curation/reference/new/',
         {
             success: function(obj) {
-                var helpPanel = new YAHOO.widget.Panel("helpPanel", {
-                    width: "500px",
-                    visible: true,
-                    modal: true,
-                    fixedcenter: true,
-                    zIndex: 3
-                });
-                helpPanel.setHeader("Gene Curation");
+                this.helpPanel.setHeader("Reference Curation");
                 helpPanel.setBody(obj.responseText);
                 helpPanel.render(document.body);
+                this.helpPanel.cfg.setProperty('visible',true);
             },
             failure: this.onFailure,
             scope: this
         },
-        postData);
-    
-        YAHOO.util.Connect.asyncRequest('DELETE', '/cache/gene/' + this.geneID);
+        id);
     };
     YAHOO.Dicty.Curation.prototype.onFailure = function(obj) {
         //alert(obj.statusText);
     };
+    YAHOO.Dicty.Curation.prototype.validateInput = function(v){
+        if (v == undefined || v.match(/\d/) == undefined){
+            this.helpPanel.setHeader('Curation Error');
+            this.helpPanel.setBody('You have to enter ID first');
+            this.helpPanel.render(document.body);
+            this.helpPanel.cfg.setProperty('visible',true);
+            return false;
+        }
+        return true;
+    }
+    
 })();
 
-function init(v) {
+function initCuration(v) {
     var curation = new YAHOO.Dicty.Curation;
     curation.init(v);
 }
