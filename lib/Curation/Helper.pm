@@ -17,7 +17,7 @@ sub search_feature {
     return if !@dbxref;
 
     my @features =
-        map { Chado::Feature->search( { dbxref_id => $_->dbxref_id } ) }
+        map { Chado::Feature->search( { dbxref_id => $_->dbxref_id, is_deleted => 0 } ) }
         @dbxref;
 
     return @features;
