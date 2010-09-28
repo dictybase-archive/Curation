@@ -100,6 +100,14 @@ content:
               limit  : 5
               matrix : BLOSUM62
               program : blastp                    
+            - database : dicty_primary_protein
+              name: D.discoideum
+              evalue : 0.1
+              filter : T
+              gapped : T
+              limit  : 5
+              matrix : BLOSUM62
+              program : blastp
     
     curation:
         features:
