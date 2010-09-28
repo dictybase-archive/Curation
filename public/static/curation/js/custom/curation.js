@@ -4,7 +4,7 @@
     var Event = YAHOO.util.Event;
 
     YAHOO.Dicty.Curation = function() {
-        var logger = new YAHOO.widget.LogReader();
+        //var logger = new YAHOO.widget.LogReader();
     };
 
     YAHOO.Dicty.Curation.prototype.init = function() {

@@ -51,7 +51,7 @@ content:
                   adaptor : DBI::mysql
                   user : caboose
                   pass : gmodmaster
- 
+                 
     blink :
         url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=
     
@@ -160,13 +160,14 @@ content:
             - type   : mRNA
               source : dictyBase Curator
               default : 1
-              title : Curated model            
+              title : Curated model         
+              relationship : part_of   
             - type   : mRNA
               source : Sequencing Center
               default : 1
               title : Sequencing center model
+              relationship : part_of
             - type   : mRNA
               source : geneID reprediction
               title :  geneID reprediction
     
-

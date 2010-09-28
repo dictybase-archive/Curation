@@ -12,6 +12,7 @@
                 <span id="curation-gene"/></span>
             </td>
         </tr>
+<!--
         <tr>
             <td>
                 Create PubMed reference
@@ -21,6 +22,7 @@
                 <span id="curation-reference"/></span>
             </td>
         </tr>
+-->
     </table>
 </div>
 <script>

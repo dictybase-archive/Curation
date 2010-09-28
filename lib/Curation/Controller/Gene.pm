@@ -249,7 +249,7 @@ sub blast_database {
     my $reference_feature = $helper->reference_feature($feature);
 
     my @features =
-        $helper->get_features( $reference_feature, $frame, $config );
+        $helper->get_features( $reference_feature, $frame, $config, $feature );
 
     my $default = $self->default( $config->{features} );
     my $params  = {};
@@ -304,7 +304,7 @@ sub protein {
     my $reference_feature = $helper->reference_feature($feature);
 
     my @features =
-        $helper->get_features( $reference_feature, $frame, $config );
+        $helper->get_features( $reference_feature, $frame, $config, $feature );
 
     my $default = $self->default( $config->{features} );
     my $params  = {};
@@ -337,7 +337,7 @@ sub curation {
     my $reference_feature = $helper->reference_feature($feature);
 
     my @features =
-        $helper->get_features( $reference_feature, $frame, $config );
+        $helper->get_features( $reference_feature, $frame, $config, $feature );
 
     my $params = $config;
     $params->{types} = {};
@@ -723,4 +723,65 @@ sub clean_cache {
 #    my $report = $tx->res->message;
 #    $self->app->log->debug($report);
 }
+
+## --- Some helpers
+sub default {
+    my ( $self, $features ) = @_;
+    my $default;
+    foreach my $feature (@$features) {
+        next if !$feature->{default};
+        $default = $self->identifier($feature);
+    }
+    return $default;
+}
+
+sub identifier {
+    my ( $self, $feature ) = @_;
+    my $identifier;
+
+    return $feature->{title} if $feature->{title};
+
+    $identifier = $feature->{type};
+    $identifier .= '-' . $feature->{source} if $feature->{source};
+    return $identifier;
+}
+
+sub frame {
+    my ( $self, $feature, $padding ) = @_;
+
+    my $helper = $self->app->helper;
+    my $start  = $helper->start($feature) - $padding;
+    my $end    = $helper->end($feature) + $padding;
+
+    return { start => $start, end => $end, length => $end - $start };
+}
+
+sub frame_coordinates {
+    my ( $self, $feature, $frame, $flip ) = @_;
+
+    my $helper        = $self->app->helper;
+    my $feature_start = $helper->start($feature);
+    my $feature_end   = $helper->end($feature);
+
+    return
+        if $feature_start > $frame->{end} || $feature_end < $frame->{start};
+
+    my $start = $feature_start - $frame->{start} + 1;
+    $start = 0 if $start < 0;
+
+    my $end = $feature_end - $frame->{start} + 1;
+    $end = $frame->{length} + 1 if $end > $frame->{length};
+
+    my ( $f_start, $f_end );
+    if ($flip) {
+        $f_start = $frame->{length} - $end + 1;
+        $f_start = 0 if $f_start < 0;
+        $f_end   = $frame->{length} - $start + 1;
+        return { start => $f_start, end => $f_end };
+    }
+
+    return if $start && $end == 0;
+    return { start => $start, end => $end };
+}
+
 1;

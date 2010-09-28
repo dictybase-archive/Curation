@@ -17,8 +17,10 @@ sub search_feature {
     return if !@dbxref;
 
     my @features =
-        map { Chado::Feature->search( { dbxref_id => $_->dbxref_id, is_deleted => 0 } ) }
-        @dbxref;
+        map {
+        Chado::Feature->search(
+            { dbxref_id => $_->dbxref_id, is_deleted => 0 } )
+        } @dbxref;
 
     return @features;
 }
@@ -38,14 +40,12 @@ sub reference_feature {
 
 sub start {
     my ( $self, $feature ) = @_;
-    
+
     my $start;
-    
-    eval {
-        $start = $feature->start -1;
-    };
+
+    eval { $start = $feature->start - 1; };
     return $start if $start;
-    
+
     my $floc = Chado::Featureloc->get_single_row(
         { feature_id => $feature->feature_id } );
 
@@ -57,11 +57,9 @@ sub end {
     my ( $self, $feature ) = @_;
 
     my $end;
-    eval {
-        $end = $feature->stop;
-    };
+    eval { $end = $feature->stop; };
     return $end if $end;
-    
+
     my $floc = Chado::Featureloc->get_single_row(
         { feature_id => $feature->feature_id } );
 
@@ -167,7 +165,7 @@ sub filter_by_source {
     my $dbxref = Chado::Dbxref->get_single_row( { accession => $source } );
     $self->app->log->debug("$source dbxref not found") if !$dbxref;
     return if !$dbxref;
-    
+
     return grep {
         Chado::Feature_Dbxref->get_single_row(
             {   feature_id => $_->feature_id,
@@ -189,29 +187,48 @@ sub filter_by_type {
     return grep { $_->type == $type_cvterm->cvterm_id } @$features;
 }
 
+sub filter_by_relationship {
+    my ( $self, $features, $type, $feature ) = @_;
+    my $rel_cvterm = Chado::Cvterm->get_single_row(
+        {   name  => $type,
+            cv_id => Chado::Cv->get_single_row( { name => 'relationship' } )
+        }
+    );
+    
+    return if !$rel_cvterm;
+    return grep {
+        Chado::Feature_Relationship->search(
+            {   subject_id => $_->feature_id,
+                object_id  => $feature->feature_id,
+                type_id    => $rel_cvterm->cvterm_id
+            }
+            )
+    } @$features;
+}
+
 sub is_flipped {
     my ( $self, $feature ) = @_;
-    
+
     ## check feature floc first
     my $floc = Chado::Featureloc->get_single_row(
         { feature_id => $feature->feature_id } );
-        return 1 if $floc->strand == -1;
-    
+    return 1 if $floc->strand == -1;
+
     ## check subfeatures (just in case)
-    foreach my $subfeature ($self->subfeatures($feature)){
+    foreach my $subfeature ( $self->subfeatures($feature) ) {
         my $floc = Chado::Featureloc->get_single_row(
-        { feature_id => $subfeature->feature_id } );
+            { feature_id => $subfeature->feature_id } );
         return 1 if $floc->strand == -1;
     }
     return 0;
 }
 
 sub protein {
-    my ($self, $feature) = @_;
+    my ( $self, $feature ) = @_;
     my $protein = '';
-    my $count = 0;
+    my $count   = 0;
 
-    while ($protein eq '' && $count < 3 ){
+    while ( $protein eq '' && $count < 3 ) {
         my $tx = $self->app->client->async->post_form(
             $self->app->config->{content}->{protein}->{url},
             {   id       => $self->app->helper->id($feature),
@@ -221,34 +238,43 @@ sub protein {
         );
         $protein = $tx->res->body;
         $count++;
-        $self->app->log->debug('could not get sequence: '. Dumper $tx) if !$protein;
+        $self->app->log->debug( 'could not get sequence: ' . Dumper $tx)
+            if !$protein;
     }
-   return $protein;
+    return $protein;
 }
 
 sub get_features {
-    my ( $self, $reference_feature, $frame, $config ) = @_;
+    my ( $self, $reference_feature, $frame, $config, $feature ) = @_;
 
     my @filtered_features;
     my @all_features =
         $self->splice_features( $reference_feature, $frame->{start} - 1,
         $frame->{end} );
-
-    foreach my $feature ( @{ $config->{features} } ) {
-        my $type   = $feature->{type};
-        my $source = $feature->{source} || undef;
-        my $title  = $feature->{title} || undef;
+    
+    foreach my $conf_feature ( @{ $config->{features} } ) {
+        my $type         = $conf_feature->{type};
+        my $source       = $conf_feature->{source} || undef;
+        my $title        = $conf_feature->{title} || undef;
+        my $relationship = $conf_feature->{relationship} || undef;
 
         my @features = $self->filter_by_type( \@all_features, $type );
         @features = $self->filter_by_source( \@features, $source )
             if $source;
-        map { $_->{type} = $type } @features;
+        
+        $self->app->log->debug('here');
+        
+        @features =
+            $self->filter_by_relationship( \@features, $relationship,
+            $feature )
+            if $relationship;
+
+        map { $_->{type}   = $type } @features;
         map { $_->{source} = $source } @features if $source;
-        map { $_->{title} = $title } @features if $title;
+        map { $_->{title}  = $title } @features if $title;
         push @filtered_features, @features;
     }
     return @filtered_features;
 }
-
 
 1;

@@ -219,3 +219,7 @@ a img {
 .yui-skin-sam .yui-navset .content_tab .yui-nav a { 
     padding         :3px 4px;
 }
+.yui-button {
+    display:inline-block;
+    vertical-align:bottom;
+}
