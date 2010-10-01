@@ -51,8 +51,7 @@
         <% if ($self->session('username')) {%>
             <div id="user_nav">
                 <% if ($self->stash('id')) {%>
-                    <span class="highlited"><%= $self->stash('id')%> </span>|
-                
+                    <a class="highlited" href="<%= '/gene/' . $self->stash('id') %>"><%= $self->stash('id')%></a>|
                 <% }%>
                 <%= 'Logged in as ' . $self->session('username') %> | 
                 <a href="/curation/logout">Logout</a> | 
