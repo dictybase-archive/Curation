@@ -40,6 +40,7 @@
             </tr>
             <tr><th  colspan="4">
                 <span id="curation-approve"/></span>
+                <span id="curation-impossible"/></span>
             </th></tr>
         </table>                            
     </form>

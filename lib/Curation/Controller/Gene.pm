@@ -249,7 +249,8 @@ sub blast_database {
     my $reference_feature = $helper->reference_feature($feature);
 
     my @features =
-        $helper->get_features( $reference_feature, $frame, $config, $feature );
+        $helper->get_features( $reference_feature, $frame, $config,
+        $feature );
 
     my $default = $self->default( $config->{features} );
     my $params  = {};
@@ -304,7 +305,8 @@ sub protein {
     my $reference_feature = $helper->reference_feature($feature);
 
     my @features =
-        $helper->get_features( $reference_feature, $frame, $config, $feature );
+        $helper->get_features( $reference_feature, $frame, $config,
+        $feature );
 
     my $default = $self->default( $config->{features} );
     my $params  = {};
@@ -337,7 +339,8 @@ sub curation {
     my $reference_feature = $helper->reference_feature($feature);
 
     my @features =
-        $helper->get_features( $reference_feature, $frame, $config, $feature );
+        $helper->get_features( $reference_feature, $frame, $config,
+        $feature );
 
     my $params = $config;
     $params->{types} = {};
@@ -359,6 +362,36 @@ sub curation {
 }
 
 ## --- Curation part
+sub skip {
+    my ($self) = @_;
+
+    my $dbh    = $self->app->dbh;
+    my $helper = $self->app->helper;
+
+    my $id               = $self->stash('id');
+    my $gene             = $self->get_gene($id);
+    my $curator_initials = $self->session('initials');
+    my $note_date        = strftime "%d-%b-%Y", localtime;
+    my $note =
+        'This gene has been inspected by a curator but there is no adequate support to make a curated model at this time.';
+
+    eval {
+
+        my $fprop = Chado::Featureprop->create(
+            {   feature_id => $gene->feature_id,
+                type_id    => Chado::Cvterm->get_single_row(
+                    { name => 'public note' }
+                    )->cvterm_id,
+                value => $note . ' ' . uc($note_date) . ' ' . $curator_initials
+            }
+        );
+    };
+    $self->failure( 'Error adding note: ' . $@ ) if $@;
+    $dbh->commit;
+
+    #$self->clean_cache($id);
+}
+
 sub update {
     my ($self) = @_;
 
@@ -561,7 +594,8 @@ sub update {
     };
     $self->failure( 'Error adding paragraph: ' . $@ ) if $@;
     $dbh->commit;
-    $self->clean_cache($id);
+
+    #$self->clean_cache($id);
 }
 
 sub prune_models {
@@ -718,10 +752,10 @@ sub failure {
 sub clean_cache {
     my ( $self, $id ) = @_;
     my $config = $self->app->config;
-    
-#    my $tx = $self->client->delete( $config->{cache}->{cleanup_url} . $id );
-#    my $report = $tx->res->message;
-#    $self->app->log->debug($report);
+
+ #    my $tx = $self->client->delete( $config->{cache}->{cleanup_url} . $id );
+ #    my $report = $tx->res->message;
+ #    $self->app->log->debug($report);
 }
 
 ## --- Some helpers

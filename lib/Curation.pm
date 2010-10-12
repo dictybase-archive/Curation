@@ -93,6 +93,9 @@ sub startup {
 
     $bridge->route('/gene/:id/update')
         ->to( controller => 'gene', action => 'update', format => 'html' );
+        
+    $bridge->route('/gene/:id/skip')
+        ->to( controller => 'gene', action => 'skip', format => 'html' );
     
     $bridge->route('/reference/new/')->via('post')
         ->to( controller => 'reference', action => 'new', format => 'html' );

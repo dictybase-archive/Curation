@@ -1,7 +1,8 @@
 #!/usr/bin/env perl
 
 use strict;
-use local::lib '/home/ubuntu/dictyBase/Libs/modern-perl-dapper';
+#use local::lib '/home/ubuntu/dictyBase/Libs/modern-perl-dapper';
+#use local::lib '/home/ubuntu/dictyBase/Libs/gb2';
 use FindBin;
 use Mojo::Server::PSGI;
 
@@ -20,6 +21,7 @@ BEGIN { $ENV{ORACLE_HOME} = '/oracle/10g';
 	$ENV{CHADO_UID} = 'CGM_CHADO/cgm_chado@DICTYBASE';
 };
 
+use Curation;
 my $psgi = Mojo::Server::PSGI->new(app_class => 'Curation');
 my $app = sub {$psgi->run(@_)};
 $app;
