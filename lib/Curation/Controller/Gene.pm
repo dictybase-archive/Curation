@@ -373,16 +373,28 @@ sub skip {
     my $curator_initials = $self->session('initials');
     my $note_date        = strftime "%d-%b-%Y", localtime;
     my $note =
-        'This gene has been inspected by a curator but there is no adequate support to make a curated model at this time.';
+        'This gene has been inspected by a curator, but there is currently not adequate support to make a curated model.';
 
     eval {
-
-        my $fprop = Chado::Featureprop->create(
+        my ($fprop) = Chado::Featureprop->search(
             {   feature_id => $gene->feature_id,
                 type_id    => Chado::Cvterm->get_single_row(
                     { name => 'public note' }
                     )->cvterm_id,
-                value => $note . ' ' . uc($note_date) . ' ' . $curator_initials
+            }
+        );
+        $self->failure(
+            'Error adding note: public note already exists for the gene')
+            if $fprop;
+
+        $fprop = Chado::Featureprop->create(
+            {   feature_id => $gene->feature_id,
+                type_id    => Chado::Cvterm->get_single_row(
+                    { name => 'public note' }
+                    )->cvterm_id,
+                value => $note . ' '
+                    . uc($note_date) . ' '
+                    . $curator_initials
             }
         );
     };
