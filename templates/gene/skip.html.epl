@@ -1,0 +1,4 @@
+% my ($self, $c) = @_;
+<div class="<%= $self->stash('class') || 'info' %>">
+    <%= $self->stash('message') || 'entry was skipped'%>
+</div>
