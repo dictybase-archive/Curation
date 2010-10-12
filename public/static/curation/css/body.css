@@ -223,3 +223,12 @@ a img {
     display:inline-block;
     vertical-align:bottom;
 }
+span .yui-button-hover #curation-impossible {
+    background-position: 0 -120px;
+}
+span #curation-impossible {
+    background:url("../images/sprite.gif") repeat-x scroll 0 -111px transparent;
+}
+.yui-skin-sam .yui-button button, .yui-skin-sam .yui-button a {
+    width:80px;
+}

@@ -47,7 +47,7 @@
         });
         this.curationImpossibleButton = new YAHOO.widget.Button({
             container: this.curationImpossibleButtonEl,
-            label: 'Give up',
+            label: 'Skip',
             type: 'button',
             id: 'curation-impossible',
             onclick: {
