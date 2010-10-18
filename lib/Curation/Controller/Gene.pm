@@ -300,6 +300,26 @@ sub blast_by_database {
     return $self->render_partial( template => 'subtabs', %{$params} );
 }
 
+sub blast_report {
+    my ( $self, $tx ) = @_;
+    my $config = $self->app->config->{content}->{blast};
+    my $report = $tx->res->body;
+    
+    my $error  = 'error retrieving BLAST results'
+        if !$report || $report =~ m{Sorry}i;
+
+    my $content =
+          $error
+        ? $error
+        : '<iframe src="'
+        . $config->{format_report_url} . '/'
+        . $report
+        . '?noheader=1"></iframe>';
+
+    
+    return $content;
+}
+
 sub protein {
     my ($self) = @_;
 

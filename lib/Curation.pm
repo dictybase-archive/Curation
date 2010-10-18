@@ -26,7 +26,7 @@ sub startup {
     # default log level
     $self->log->level('debug');
 
-# Note that you should use a custom secret to make signed cookies really secure.
+    # Note that you should use a custom secret to make signed cookies really secure.
     $self->secret('dicty4ever');
     $self->session->cookie_path('/curation');
     $self->session->cookie_name('dictybasecuration');
@@ -49,43 +49,35 @@ sub startup {
 
     my $bridge = $router->bridge('curation')->to('usersession#validate');
 
-    $bridge->route('')->to( 'curation#index', format => 'html' );
-
-    $bridge->route('genes')->to( 'gene#index', format => 'html' );
-
-    $bridge->route('gene/:id')->to( 'gene#show', format => 'html' );
-
+    $bridge->route('')
+        ->to( 'curation#index', format => 'html' );
+    $bridge->route('genes')
+        ->to( 'gene#index', format => 'html' );
+    $bridge->route('gene/:id')
+        ->to( 'gene#show', format => 'html' );
     $bridge->route('gene/:id/fasta')->via('get')
         ->to( 'gene#fasta', format => 'html' );
-
     $bridge->route('gene/:id/gbrowse')->via('get')
         ->to( 'gene#gbrowse', format => 'html' );
-
     $bridge->route('gene/:id/protein')->via('get')
         ->to( 'gene#protein', format => 'html' );
-
     $bridge->route('gene/:id/blink')->via('get')
         ->to( 'gene#blink', format => 'html' );
-
     $bridge->route('gene/:id/blast')->via('get')
         ->to( 'gene#blast', format => 'html' );
-
     $bridge->route('gene/:id/blast/database')->via('get')
         ->to( 'gene#blast_by_database', format => 'html' );
-
     $bridge->route('gene/:id/curation')->via('get')
         ->to( 'gene#curation', format => 'html' );
-
-    $bridge->route('gene/:id/update')->to( 'gene#update', format => 'html' );
-
-    $bridge->route('gene/:id/skip')->to( 'gene#skip', format => 'html' );
+    $bridge->route('gene/:id/update')
+        ->to( 'gene#update', format => 'html' );
+    $bridge->route('gene/:id/skip')
+        ->to( 'gene#skip', format => 'html' );
 
     $bridge->route('reference/:id/')
         ->to( 'reference#show', format => 'html' );
-        
     $bridge->route('reference/:id/:gene_id/')->via('post')
         ->to( 'reference#link_gene', format => 'html' );
-
     $bridge->route('reference/:id/:gene_id/')->via('delete')
         ->to( 'reference#unlink_gene', format => 'html' );
         

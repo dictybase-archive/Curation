@@ -39,10 +39,17 @@ gene:
             - type   : EST
               style  : text-decoration: underline
               subfeature : nucleotide_match
+            - type   : RNAseq
+              style  : UPPERCASE
+              sourcedb : 
+                  dsn : dbi:mysql:host=192.168.4.53;database=seqfeature
+                  adaptor : DBI::mysql
+                  user : caboose
+                  pass : gmodmaster
             - type   : pseudogene
               style  : BGCOLOR lightgrey
               subfeature : pseudogenic_exon
-    
+
     blink :
         url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=
     
@@ -61,7 +68,6 @@ gene:
             - type   : mRNA
               source : geneID reprediction
               title: geneID reprediction
-        
         report_url : http://192.168.60.10/tools/blast/run
         format_report_url : http://192.168.60.10/tools/blast/report
         parameters :
