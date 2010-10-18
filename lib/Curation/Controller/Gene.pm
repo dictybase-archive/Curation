@@ -391,7 +391,7 @@ sub skip {
     my $curator_initials = $self->session('initials');
     my $note_date        = strftime "%d-%b-%Y", localtime;
     my $note =
-        'This gene has been inspected by a curator, but there is currently not adequate support to make a curated model.';
+        'This gene has been inspected by a curator, but there is currently inadequate support to make a curated model.';
 
     eval {
         my ($fprop) = Chado::Featureprop->search(
