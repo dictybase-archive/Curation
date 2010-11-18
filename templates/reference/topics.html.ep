@@ -53,7 +53,7 @@
     my $limit = 3;
 %>
 <table>
-    <% my @groups = keys %{$topics}; %>
+    <% my @groups = sort {scalar @{$topics->{$b}} <=> scalar @{$topics->{$a}}} keys %{$topics}; %>
     <% while (@groups > 0){  %>
         <% my @subs = splice(@groups, 0, $limit); %>
         <tr> 
@@ -64,8 +64,8 @@
         <tr> 
             <% foreach my $sub (@subs){ %>
                 <td>
-                <% foreach my $topic (@{$topics->{$sub}}) { %>
-                    <input type="checkbox" value="<%= $topic %>"><%= $topic %></input><br/>
+                <% foreach my $topic ( sort @{$topics->{$sub}}) { %>
+                    <input type="checkbox" value="<%= $topic %>"><%= $topic %><br/>
                 <% } %>
                 </td>
             <% } %>

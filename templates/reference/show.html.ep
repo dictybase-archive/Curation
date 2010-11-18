@@ -18,7 +18,7 @@
         <label for="genes-link-list">Genes to link</label>
         <textarea id="genes-link-list">Paste IDs here  ......
     	</textarea>
-        <span id="genes-link-button"/></span>    	
+        <span id="genes-link-button"></span>    	
     </div>
     <div id="linked" class="input-column narrow">
         <label for="genes-link-list">Genes already linked</label>
@@ -30,9 +30,9 @@
                 </option>
             <% } %>
         </select>
-        <span id="select-all-button"/></span>
-        <span id="clear-selection-button"/></span>
-        <span id="genes-unlink-button"/></span>
+        <span id="select-all-button"></span>
+        <span id="clear-selection-button"></span>
+        <span id="genes-unlink-button"></span>
     </div>
     <div id="topics" class="input-column">
         <%= $self->render_partial('reference/topics'); %>
