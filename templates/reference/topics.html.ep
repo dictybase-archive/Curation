@@ -1,0 +1,74 @@
+<% 
+    my $classifier = {
+        'Mutants/Phenotypes'                => 'Genetics/Cell Biology',
+        'Function/Process'                  => 'Genetics/Cell Biology',
+        'Cellular Location'                 => 'Genetics/Cell Biology',
+        'Cytoskeleton'                      => 'Genetics/Cell Biology',
+        'Chemotaxis/Motility'               => 'Genetics/Cell Biology',
+        'Mitosis'                           => 'Genetics/Cell Biology',
+        'Endocytosis'                       => 'Genetics/Cell Biology',
+        'Adhesion'                          => 'Genetics/Cell Biology',
+        'Signal Transduction'               => 'Genetics/Cell Biology',
+        'Cell Cycle'                        => 'Genetics/Cell Biology',
+        'Growth'                            => 'Life Cycle',
+        'Development/Morphogenesis'         => 'Life Cycle',
+        'Sporulation/Germination'           => 'Life Cycle',
+        'Sexual Cycle'                      => 'Life Cycle',
+        'Cell Type Localization'            => 'Life Cycle',
+        'DNA/RNA Sequence Features',        => 'Nucleic Acid Information',
+        'Mapping'                           => 'Nucleic Acid Information',
+        'RNA Levels and Processing'         => 'Nucleic Acid Information',
+        'Transcriptional Regulation'        => 'Nucleic Acid Information',
+        'Translational Regulation'          => 'Nucleic Acid Information',
+        'Disease Related'                   => 'Related Genes/Proteins',
+        'Non-mammalian Gene Related'        => 'Related Genes/Proteins',
+        'Mammalian Gene Related'            => 'Related Genes/Proteins',
+        'Phylogenetic Analysis'             => 'Related Genes/Proteins',
+        'Protein-Nucleic Acid Interactions' => 'Protein Information',
+        'Protein Physical Properties'       => 'Protein Information',
+        'Post-Translational Modifications'  => 'Protein Information',
+        'Protein-Protein Interactions'      => 'Protein Information',
+        'Protein/Nucleic Acid Structure'    => 'Protein Information',
+        'Substrates/Ligands/Cofactors'      => 'Protein Information',
+        'Protein Functional Domain'         => 'Protein Information',
+        'Regulated by'                      => 'Protein Information',
+        'Regulatory Role'                   => 'Protein Information',
+        'Synonym'                           => 'Research Aids',
+        'Other Features'                    => 'Research Aids',
+        'Strains/Constructs'                => 'Research Aids',
+        'Techniques and Reagents'           => 'Research Aids',
+        'Genome-wide Analysis'              => 'Research Aids',
+        'Antibodies'                        => 'Research Aids',
+        'Selected Review'                   => 'Curated Literature',
+        'Reviews'                           => 'Curated Literature',
+        'List of all Curated References'    => 'Curated Literature',
+        'Not yet curated'                   => 'Additional Information',
+        'Archived Literature'               => 'Additional Information',
+    }; 
+    my $topics = {};
+    foreach my $topic ( keys %{$classifier}) {
+        my $class = $classifier->{$topic};
+       push @{$topics->{$class} }, $topic;
+    }
+    my $limit = 3;
+%>
+<table>
+    <% my @groups = keys %{$topics}; %>
+    <% while (@groups > 0){  %>
+        <% my @subs = splice(@groups, 0, $limit); %>
+        <tr> 
+            <% foreach my $sub (@subs){ %>
+                <th><%= $sub %></th>
+            <% } %> 
+        </tr>
+        <tr> 
+            <% foreach my $sub (@subs){ %>
+                <td>
+                <% foreach my $topic (@{$topics->{$sub}}) { %>
+                    <input type="checkbox" value="<%= $topic %>"><%= $topic %></input><br/>
+                <% } %>
+                </td>
+            <% } %>
+        </tr>
+    <% } %>
+</table>

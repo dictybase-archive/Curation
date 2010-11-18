@@ -11,15 +11,18 @@
         this.referenceID = id; 
         
         this.linkGenesList = Dom.get('genes-link-list');
-        this.unlinkGenesList = Dom.get('genes-linked');
+        this.linkedGenesList = Dom.get('genes-linked');
         this.linkGenesButtonEl = 'genes-link-button';
         this.unlinkGenesButtonEl = 'genes-unlink-button';
+        this.selectAllButtonEl = 'select-all-button';
+        this.clearSelectionButtonEl = 'clear-selection-button';
+        
         this.waiting = 0;
         this.message = '';
         
         this.linkGenesButton = new YAHOO.widget.Button({
             container: this.linkGenesButtonEl,
-            label: 'Link genes',
+            label: 'Link',
             type: 'button',
             id: 'genes-link',
             onclick: {
@@ -29,11 +32,31 @@
         });
         this.unlinkGenesButton = new YAHOO.widget.Button({
             container: this.unlinkGenesButtonEl,
-            label: 'Unlink genes',
+            label: 'Unlink',
             type: 'button',
             id: 'genes-unlink',
             onclick: {
                 fn: function(){ this.genesUnlink(); },
+                scope: this
+            }
+        });
+        this.selectAllButton = new YAHOO.widget.Button({
+            container: this.selectAllButtonEl,
+            label: 'Select all genes',
+            type: 'button',
+            id: 'select-all',
+            onclick: {
+                fn: function(){ this.selectAll(); },
+                scope: this
+            }
+        });
+        this.clearSelectionButton = new YAHOO.widget.Button({
+            container: this.clearSelectionButtonEl,
+            label: 'Clear selection',
+            type: 'button',
+            id: 'clear-selection',
+            onclick: {
+                fn: function(){ this.clearSelection(); },
                 scope: this
             }
         });
@@ -83,11 +106,11 @@
 
     YAHOO.Dicty.ReferenceCuration.prototype.genesUnlink = function() {
         var ids = new Array();
-        var options = this.unlinkGenesList.options;
+        var linkedGenes = this.linkedGenesList.options;
    
-        for (var i in options){
-            if ( options[i].selected) {
-                ids.push(options[i].value);
+        for (var i in linkedGenes){
+            if ( linkedGenes[i].selected) {
+                ids.push(linkedGenes[i].value);
             }
         }
         this.waiting = ids.length;
@@ -100,6 +123,18 @@
             });
         }
     };
+    
+    YAHOO.Dicty.ReferenceCuration.prototype.selectAll = function() {
+        for (var i in this.linkedGenesList.options){
+            this.linkedGenesList.options[i].selected = true;
+        }
+    };
+    
+    YAHOO.Dicty.ReferenceCuration.prototype.clearSelection = function() {
+        for (var i in this.linkedGenesList.options){
+            this.linkedGenesList.options[i].selected = false;
+        }
+    }
 })();
 
 function initReferenceCuration(v) {

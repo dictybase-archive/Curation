@@ -15,22 +15,27 @@
 </div>
 <div id="curation-reference">
     <div id="genes-link" class="input-column narrow">
-        <label for="genes-link-list">Link genes</label>
+        <label for="genes-link-list">Genes to link</label>
         <textarea id="genes-link-list">Paste IDs here  ......
     	</textarea>
-    	<span id="genes-link-button"/></span>
+        <span id="genes-link-button"/></span>    	
     </div>
     <div id="linked" class="input-column narrow">
         <label for="genes-link-list">Genes already linked</label>
         <select id="genes-linked" multiple="multiple">
-            <% foreach my $gene_id ( keys %{stash('linked')} ) { %>
-                <option value="<%= $gene_id %>"><%= stash('linked')->{$gene_id} %></option>
+            <% foreach my $gene ( @{stash('linked')} ) { %>
+                <option 
+                    class="<%= $gene->{curated} ? '' : 'highlighted' %>" 
+                    value="<%= $gene->{id} %>"><%= $gene->{name} %>
+                </option>
             <% } %>
         </select>
+        <span id="select-all-button"/></span>
+        <span id="clear-selection-button"/></span>
         <span id="genes-unlink-button"/></span>
     </div>
     <div id="topics" class="input-column">
-        <input type="checkbox" id="mutant">Mutant</input>
+        <%= $self->render_partial('reference/topics'); %>
     </div>
 </div>
 <script>

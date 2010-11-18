@@ -12,14 +12,37 @@ use Modware::Publication::Author;
 use base 'Mojolicious::Controller';
 
 sub show {
-    my ($self)    = @_;
-    my $config    = $self->app->config->{reference};
-    my $ref       = $self->get_reference;
-    my $genes_rs  = $self->get_linked_genes($ref);
+    my ($self)   = @_;
+    my $config   = $self->app->config->{reference};
+    my $ref      = $self->get_reference;
+    my $genes_rs = $self->get_linked_genes($ref);
 
-    
+    my $curated_rs = $genes_rs->search(
+        {   'type_2.name' => 'Curated',
+            'cv.name'     => 'dictyBase_literature_topic'
+        },
+        {   join => {
+                'feature_pubs' => { 'feature_pubprops' => { 'type' => 'cv' } }
+            }
+        }
+    );
+    my $not_curated_rs = $genes_rs->search(
+        {   'type_2.name' => 'Not yet curated',
+            'cv.name'     => 'dictyBase_literature_topic'
+        },
+        {   join => {
+                'feature_pubs' => { 'feature_pubprops' => { 'type' => 'cv' } }
+            }
+        }
+    );
+    my @linked;
+    map { push @linked, $_ } map {
+        { id => $_->dbxref->accession, name => $_->name, curated => 1 }
+    } $curated_rs->all;
 
-    my %linked = map { $_->dbxref->accession => $_->name } @genes;
+    map { push @linked, $_ } map {
+        { id => $_->dbxref->accession, name => $_->name, curated => 0 }
+    } $not_curated_rs->all;
 
     my $author_count = $ref->total_authors;
     my $author_str;
@@ -58,7 +81,7 @@ sub show {
     $self->stash( volume       => $ref->volume ) if $ref->has_volume;
     $self->stash( abbreviation => $ref->abbreviation )
         if $ref->has_abbreviation;
-    $self->stash( linked => \%linked );
+    $self->stash( linked => \@linked );
 }
 
 sub get_reference {
@@ -109,6 +132,7 @@ sub create_pubmed {
 
     }
     $self->stash( created => 1 );
+
     #$ref->create;
     return $ref;
 }
@@ -123,7 +147,7 @@ sub get_linked_genes {
             'type.name'      => 'gene',
             'me.is_deleted'  => 0
         },
-        { join => [ 'type', { 'feature_pubs' => 'pub' }] }
+        { join => [ 'type', { 'feature_pubs' => 'pub' } ] }
     );
 }
 
