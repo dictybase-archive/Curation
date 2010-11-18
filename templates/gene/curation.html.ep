@@ -1,0 +1,48 @@
+<div>
+    <form id="curation-form">
+        <table class="content-table">
+            <tr> 
+                <% if ($self->stash('types')) { %>
+                    <td class="title">Features</td>
+                <% } %>
+                <% foreach my $qualifier (@{$self->stash('qualifiers')}) { %>
+                    <td class="title"><%= $qualifier->{'name'} %></td>
+                <% } %>                            
+            </tr>
+            <tr>
+                <% if ($self->stash('types')) { %>
+                    <td>
+                        <ul>
+                            <% foreach my $id (keys %{$self->stash('types')}) { %>
+                                <% my $value = $self->stash('types')->{$id}; %>
+                                <li>
+                                    <input class="feature" name="feature" id="<%= $value->{id} %>" type="radio" value="T" <%= $value->{default} ? 'checked="checked"' : '' %>/>
+                                    <label for="<%= $value->{id} %>"><%= $value->{name} %></label>
+                                </li>
+                            <% } %>
+                        </ul>
+                    </td>
+                <% } %>
+                <% foreach my $qualifier (@{$self->stash('qualifiers')}) { %>
+                    <% my $default = $qualifier->{default} || ''; %>
+                    <td>
+                        <ul>
+                            <% foreach my $value (@{ $qualifier->{'values'} }) { %>
+                                <% my $id = lc( $qualifier->{'type'} . ' ' . $value); $id =~ s/ /-/g; %>
+                                <li>
+                                    <input class="qualifier" id="<%= $id %>" type="checkbox" value="T" <%= $value eq $default ? 'checked="T"' : '' %>/>
+                                    <label for="<%= $id %>"><%= $value %></label>
+                                </li>
+                            <% } %>
+                        </ul>
+                    </td>
+                <% } %>
+            </tr>
+            <tr><th  colspan="4">
+                <span id="curation-approve"/></span>
+                <span id="curation-impossible"/></span>
+            </th></tr>
+        </table>                            
+    </form>
+</div>
+

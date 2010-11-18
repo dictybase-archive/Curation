@@ -1,0 +1,7 @@
+% layout 'default';
+
+<div id="container-blank">
+    <div class="error-warning">
+        <%= $self->stash('message') %>;
+    </div>
+</div>

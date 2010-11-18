@@ -1,0 +1,27 @@
+% layout 'default';
+<div id="container-blank">
+    <h1>
+        Login
+    </h1>
+    <form id="login-form" method="post" action="/curation/usersession" name="login-form">
+        <table>
+            <tr>
+                <td>
+                    <label for="username">Username</label>
+                </td>
+                <td>
+                    <input id="username" name="username">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="password">Password</label>
+                </td>
+                <td>
+                    <input id="password" type="password" name="password">
+                </td>
+            </tr>
+        </table><br>
+        <input type="submit" value="Login">
+    </form>
+</div>

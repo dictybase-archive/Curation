@@ -1,0 +1,64 @@
+<!doctype html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8">
+        <link rel="stylesheet" type="text/css" href="/static/curation/js/yui/build/fonts/fonts-min.css"><!-- Core + Skin CSS -->
+        <link rel="stylesheet" type="text/css" href="/static/curation/js/yui/build/logger/assets/skins/sam/logger.css">
+        <link rel="stylesheet" type="text/css" href="/static/curation/js/yui/build/button/assets/skins/sam/button.css">
+
+        <link rel="icon" href="/favicon.ico" type="image/x-icon">
+        <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
+        
+        <!-- Sam Skin CSS for TabView -->
+        <link rel="stylesheet" type="text/css" href="/static/curation/js/yui/build/tabview/assets/skins/sam/tabview.css">
+        <!-- Sam Skin CSS for container -->
+        <link rel="stylesheet" type="text/css" href="/static/curation/js/yui/build/container/assets/skins/sam/container.css">
+        <!-- Sam Skin CSS for menu -->
+        <link rel="stylesheet" type="text/css" href="/static/curation/js/yui/build/menu/assets/skins/sam/menu.css">
+        
+        <link rel="stylesheet" type="text/css" href="/static/curation/css/header.css">       
+        <link rel="stylesheet" type="text/css" href="/static/curation/css/body.css">
+        <link rel="stylesheet" type="text/css" href="/static/curation/css/footer.css">
+        <link rel="stylesheet" type="text/css" href="/static/curation/css/reference.css">
+        <script type="text/javascript" src="/static/curation/js/yui/build/yahoo/yahoo.js"></script>
+        <script type="text/javascript" src="/static/curation/js/yui/build/yuiloader/yuiloader-min.js"></script>
+        
+        <script type="text/javascript" src="/static/curation/js/yui/build/yahoo-dom-event/yahoo-dom-event.js"></script>
+    
+        <script type="text/javascript" src="/static/curation/js/yui/build/container/container_core-min.js"></script>
+        <script type="text/javascript" src="/static/curation/js/yui/build/menu/menu-min.js"></script>
+        <script type="text/javascript" src="/static/curation/js/yui/build/animation/animation.js"></script>
+        <script type="text/javascript" src="/static/curation/js/yui//build/element/element-beta-min.js"></script>
+        <script type="text/javascript" src="/static/curation/js/yui/build/button/button-min.js"></script>
+        <script type="text/javascript" src="/static/curation/js/yui/build/logger/logger-min.js"></script>
+        <script type="text/javascript" src="/static/curation/js/custom/gene.js"></script>
+        <script type="text/javascript" src="/static/curation/js/custom/reference.js"></script>
+        <script type="text/javascript" src="/static/curation/js/custom/curation.js"></script>
+        <script type="text/javascript" src="/static/curation/js/custom/menu.js"></script>   
+        <!-- Source file for TabView -->
+        <script src="/static/curation/js/yui/build/tabview/tabview-min.js"></script>
+        <script src="/static/curation/js/yui/build/connection/connection-min.js"></script>
+        <!-- OPTIONAL: Drag & Drop (only required if enabling Drag & Drop) -->
+        <script src="/static/curation/js/yui/build/dragdrop/dragdrop-min.js"></script>
+        <!-- Source file for container-->
+        <script src="/static/curation/js/yui/build/container/container-min.js"></script>
+
+        <title></title>
+    </head>
+    <body class="yui-skin-sam">
+    <%= $self->render_partial(template => 'toolbar') %>
+    <div id="container">
+        <% if ( session 'username') { %>
+            <div id="user_nav">
+                <% if ( stash('id') && stash('linkout') ) { %>
+                    <a class="highlighted" href="<%= stash('linkout') . stash('id') %>"><%= stash('id') %></a> |
+                <% } %>
+                <%= 'Logged in as ' . session 'username' %> | 
+                <a href="/curation/logout">Logout</a> | 
+                <a href="/curation">Home</a>
+            </div>
+        <% } %>
+        <%= $self->render_inner %>
+    </div>
+
+    <%= $self->render_partial(template => 'footer') %>
+</html>

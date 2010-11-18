@@ -1,0 +1,39 @@
+% layout 'default';
+
+<div id="container-blank">
+    <%= stash('abbreviation') . '.' if stash('abbreviation') %>
+    <%= stash('year') if stash('volume')%>
+    <%= ';' . stash('volume') if stash('abbreviation') && stash('volume') %>
+    <%= ':' . stash('pages')  if stash('abbreviation') && stash('pages') %>
+    <% if (stash 'created') { %>
+        <span class="highlighted">Newly created</span>
+    <% } %>
+    <h3><%= stash 'title' %></h3>
+    <p><%= stash 'authors' %></p>
+    
+    <p><%= stash 'abstract' %></p>
+</div>
+<div id="curation-reference">
+    <div id="genes-link" class="input-column narrow">
+        <label for="genes-link-list">Link genes</label>
+        <textarea id="genes-link-list">Paste IDs here  ......
+    	</textarea>
+    	<span id="genes-link-button"/></span>
+    </div>
+    <div id="linked" class="input-column narrow">
+        <label for="genes-link-list">Genes already linked</label>
+        <select id="genes-linked" multiple="multiple">
+            <% foreach my $gene_id ( keys %{stash('linked')} ) { %>
+                <option value="<%= $gene_id %>"><%= stash('linked')->{$gene_id} %></option>
+            <% } %>
+        </select>
+        <span id="genes-unlink-button"/></span>
+    </div>
+    <div id="topics" class="input-column">
+        <input type="checkbox" id="mutant">Mutant</input>
+    </div>
+</div>
+<script>
+    YAHOO.util.Event.onDOMReady(function(){ initReferenceCuration("<%= $self->stash('id') %>") });
+</script>
+

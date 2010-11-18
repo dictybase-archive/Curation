@@ -1,0 +1,57 @@
+% layout 'default';
+<div id="container-gene" class="yui-navset tab">
+    <ul class="yui-nav">
+        <% if ($self->stash('gbrowse') || $self->stash('fasta')) { %>
+            <li class="selected"><a href="#gbrowse"><em>GBrowse</em></a></li>
+        <% } %>
+        <% if ($self->stash('protein')) { %>
+            <li><a href="#protein"><em>Protein</em></a></li>
+        <% } %>
+        <% if ($self->stash('blink')) { %>
+            <li><a href="#blink"><em>Blink</em></a></li>
+        <% } %>
+        <% if ($self->stash('blast')) { %>
+            <li><a href="#blast"><em>Blast</em></a></li>
+        <% } %>
+        <li><a href="#curation"><em>Curation</em></a></li>
+    </ul>            
+    <div class="yui-content">
+        <% if ($self->stash('gbrowse') || $self->stash('fasta')) { %>
+            <div>
+                <table class="content-table">
+                    <tr>
+                        <% if ($self->stash('fasta')) { %>
+                            <td id="fasta" class="autoload">
+                            </td>   
+                        <% } %>
+                        <% if ($self->stash('gbrowse')) { %>
+                            <td id="gbrowse" class="autoload title">
+                            </td>
+                        <% } %>                            
+                    </tr>
+                </table>
+            </div>
+        <% } %>
+        <% if ($self->stash('protein')) { %>
+            <div id="protein" class="autoload">
+            </div>
+        <% } %>
+        <% if ($self->stash('blink')) { %>
+            <div id="blink" class="autoload">
+            </div>
+        <% } %>
+        <% if ($self->stash('blast')) { %>
+            <div id="blast" class="autoload">
+            </div>
+        <% } %>
+        <% if ($self->stash('curation')) { %>
+            <div id="curation" class="autoload">
+            </div>
+        <% } %>
+    </div>
+</div>
+
+<script>
+    YAHOO.util.Event.onDOMReady(function(){ initGeneCuration("<%= $self->stash('id') %>") });
+</script>
+
