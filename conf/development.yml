@@ -1,15 +1,10 @@
-page:
-    header : page-header.tt
-    footer : page-footer.tt
-
-database : curation.db
-
 organism:
     discoideum: 
         prefix : DDB
         site_name : dictyBase
 
-content:
+gene:
+    linkout : /gene/
     gbrowse :
         version : 2
         tracks:
@@ -44,14 +39,10 @@ content:
             - type   : EST
               style  : text-decoration: underline
               subfeature : nucleotide_match
-            - type   : RNAseq
-              style  : UPPERCASE
-              sourcedb : 
-                  dsn : dbi:mysql:host=192.168.4.53;database=seqfeature
-                  adaptor : DBI::mysql
-                  user : caboose
-                  pass : gmodmaster
-                 
+            - type   : pseudogene
+              style  : BGCOLOR lightgrey
+              subfeature : pseudogenic_exon
+    
     blink :
         url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=
     
@@ -59,18 +50,20 @@ content:
         features:
             - type   : mRNA
               source : dictyBase Curator
+              relationship : part_of   
               default : 1
               title : Curated model            
             - type   : mRNA
               source : Sequencing Center
+              relationship : part_of   
               default : 1
               title : Sequencing center model
             - type   : mRNA
               source : geneID reprediction
               title: geneID reprediction
-
-        report_url : http://testdb.dictybase.org/tools/blast/run
-        format_report_url : http://testdb.dictybase.org/tools/blast/report
+        
+        report_url : http://192.168.60.10/tools/blast/run
+        format_report_url : http://192.168.60.10/tools/blast/report
         parameters :
             - database : purpureum_protein.fas
               name : D.purpureum
@@ -80,6 +73,7 @@ content:
               limit  : 5
               matrix : BLOSUM62
               program : blastp
+              wordsize : 3
               default : 1
             - database : fasciculatum_protein.fas
               name: D.fasciculatum
@@ -89,6 +83,7 @@ content:
               limit  : 5
               matrix : BLOSUM62
               program : blastp
+              wordsize : 3
             - database : pallidum_protein.fas
               name : P.pallidum
               evalue : 0.1
@@ -96,12 +91,14 @@ content:
               gapped : T
               limit  : 5
               matrix : BLOSUM62
-              program : blastp                    
+              program : blastp  
+              wordsize : 3                  
     
     curation:
         features:
             - type   : mRNA
               source : Sequencing Center
+              relationship : part_of   
               default : 1  
               title : Sequencing center model
             - type   : mRNA
@@ -128,34 +125,8 @@ content:
                   - Incomplete support
                   - Conflicting evidence
     
-    interpro :
-        wdsl : http://www.ebi.ac.uk/Tools/webservices/wsdl/WSInterProScan.wsdl
-        timeout: 600
-        proxy : http://localhost/
-        check_interval : 15
-        features:
-            - type   : mRNA
-              source : Sequencing Center
-            - type   : mRNA
-              source : geneID reprediction        
-        apps :
-            - blastprodom
-            - fprintscan
-            - gene3d
-            - hamap
-            - hmmpanther
-            - hmmpfam
-            - hmmpir
-            - hmmsmart
-            - hmmtigr
-            - patternscan
-            - profilescan
-            - signalp
-            - superfamily
-            - tmhmm
-    
     protein:
-        url : http://genomes.dictybase.org/fasta
+        url : http://192.168.60.10/tools/fasta
         features:
             - type   : mRNA
               source : dictyBase Curator
@@ -171,3 +142,15 @@ content:
               source : geneID reprediction
               title :  geneID reprediction
     
+
+reference: 
+    linkout : /db/cgi-bin/dictyBase/reference/reference.pl?refNo=
+
+database:
+    dsn: dbi:Oracle:host=192.168.60.10;sid=dictybase
+    user: CGM_CHADO
+    pwd: CGM_CHADO
+    attr: 
+        LongReadLen: 10000
+        AutoCommit: 1
+    login : curation.db

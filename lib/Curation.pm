@@ -5,20 +5,19 @@ use warnings;
 use YAML;
 use dicty::DBH;
 use File::Spec::Functions;
-
-#use local::lib '/home/ubuntu/dictyBase/Libs/modernperl';
-
-use Curation::Renderer::TT;
-use Curation::Helper;
-
-use Mojolicious::Plugin::DefaultHelpers;
-
+use Curation::Utils;
+use Modware::DataSource::Chado;
 use base 'Mojolicious';
+use ModConfig;
+
+use version;
+our $VERSION = qv('2.0.0');
 
 __PACKAGE__->attr('config');
-__PACKAGE__->attr( 'has_config' => 0);
-__PACKAGE__->attr('helper');
-__PACKAGE__->attr('dbh');
+__PACKAGE__->attr('has_config');
+__PACKAGE__->attr('utils');
+__PACKAGE__->attr('dbh');       ## dicty legacy model connection
+__PACKAGE__->attr('schema');    ## Modware::DataSource::Chado model connection
 
 # This method will run once at server start
 sub startup {
@@ -27,110 +26,104 @@ sub startup {
     # default log level
     $self->log->level('debug');
 
-    #my $plugins = $self->plugins(Mojolicious::Plugin::DefaultHelpers->new);
-
-    ##### does not work?
-    #Note that you should use a custom secret to make signed cookies really secure.
+# Note that you should use a custom secret to make signed cookies really secure.
     $self->secret('dicty4ever');
     $self->session->cookie_path('/curation');
-    $self->session->cookie_name('/dictybasecuration');
+    $self->session->cookie_name('dictybasecuration');
     $self->session->default_expiration(18000);
-    
+
     # Routes
     my $router = $self->routes;
-    
+
     # Controlles namespace
     my $base = $router->namespace;
-    $router   = $router->namespace($base. '::Controller');
-    
-    $router->route('/login')->to(
-        controller => 'usersession',
-        action     => 'login',
-        format     => 'html'
-    );
-    $router->route('/logout')->to(
-        controller => 'usersession',
-        action     => 'logout',
-        format     => 'html'
-    );
-    
-    $router->route('/usersession')->via('post')->to(
-        controller => 'usersession',
-        action     => 'create',
-    );
+    $router = $router->namespace( $base . '::Controller' );
 
-    my $bridge = $router->bridge->to(
-        controller => 'usersession',
-        action     => 'validate'
-    );
+    $router->route('curation/login')
+        ->to( 'usersession#login', format => 'html' );
+    $router->route('curation/logout')
+        ->to( 'usersession#logout', format => 'html' );
 
-    $bridge->route('/')
-        ->to( controller => 'curation', action => 'index', format => 'html' );
+    $router->route('curation/usersession')->via('post')
+        ->to('usersession#create');
 
-    $bridge->route('/genes')
-        ->to( controller => 'gene', action => 'index', format => 'html' );
+    my $bridge = $router->bridge('curation')->to('usersession#validate');
 
-    $bridge->route('/gene/:id')
-        ->to( controller => 'gene', action => 'show', format => 'html' );
+    $bridge->route('')->to( 'curation#index', format => 'html' );
 
-    $bridge->route('/gene/:id/fasta')->via('get')
-        ->to( controller => 'gene', action => 'fasta', format => 'html' );
+    $bridge->route('genes')->to( 'gene#index', format => 'html' );
 
-    $bridge->route('/gene/:id/gbrowse')->via('get')
-        ->to( controller => 'gene', action => 'gbrowse', format => 'html' );
+    $bridge->route('gene/:id')->to( 'gene#show', format => 'html' );
 
-    $bridge->route('/gene/:id/protein')->via('get')
-        ->to( controller => 'gene', action => 'protein', format => 'html' );
+    $bridge->route('gene/:id/fasta')->via('get')
+        ->to( 'gene#fasta', format => 'html' );
 
-    $bridge->route('/gene/:id/blink')->via('get')
-        ->to( controller => 'gene', action => 'blink', format => 'html' );
-    
-    $bridge->route('/gene/:id/blast')->via('get')
-        ->to( controller => 'gene', action => 'blast', format => 'html' );
+    $bridge->route('gene/:id/gbrowse')->via('get')
+        ->to( 'gene#gbrowse', format => 'html' );
 
-    $bridge->route('/gene/:id/curation')->via('get')
-        ->to( controller => 'gene', action => 'curation', format => 'html' );
+    $bridge->route('gene/:id/protein')->via('get')
+        ->to( 'gene#protein', format => 'html' );
 
-    $bridge->route('/gene/:id/update')
-        ->to( controller => 'gene', action => 'update', format => 'html' );
+    $bridge->route('gene/:id/blink')->via('get')
+        ->to( 'gene#blink', format => 'html' );
+
+    $bridge->route('gene/:id/blast')->via('get')
+        ->to( 'gene#blast', format => 'html' );
+
+    $bridge->route('gene/:id/blast/database')->via('get')
+        ->to( 'gene#blast_by_database', format => 'html' );
+
+    $bridge->route('gene/:id/curation')->via('get')
+        ->to( 'gene#curation', format => 'html' );
+
+    $bridge->route('gene/:id/update')->to( 'gene#update', format => 'html' );
+
+    $bridge->route('gene/:id/skip')->to( 'gene#skip', format => 'html' );
+
+    $bridge->route('reference/:id/')
+        ->to( 'reference#show', format => 'html' );
         
-    $bridge->route('/gene/:id/skip')
-        ->to( controller => 'gene', action => 'skip', format => 'html' );
-    
-    $bridge->route('/reference/new/')->via('post')
-        ->to( controller => 'reference', action => 'new', format => 'html' );
+    $bridge->route('reference/:id/:gene_id/')->via('post')
+        ->to( 'reference#link_gene', format => 'html' );
+
+    $bridge->route('reference/:id/:gene_id/')->via('delete')
+        ->to( 'reference#unlink_gene', format => 'html' );
         
     # config file setup
     $self->set_config;
 
     # set helper
-    $self->helper( Curation::Helper->new() );
-    $self->helper->app($self);
-        
-    # set dbh
-    $self->dbh(dicty::DBH->new());
+    $self->utils( Curation::Utils->new() );
+    $self->utils->app($self);
 
+    # set dbh
+    $self->set_dbh;
 }
 
 sub set_config {
-    my ( $self, $c ) = @_;
-
-    #set up config file usually look under conf folder
-    #supports similar profile as log file
+    my ($self) = @_;
 
     my $folder = $self->home->rel_dir('conf');
-    if ( !-e $folder ) {
-        return;
-    }
+    return if !-e $folder;
 
-    my $mode   = $self->mode();
-    my $suffix = '.yml';
-
-    my $file = catfile( $folder, $mode . $suffix );
+    my $file = catfile( $folder, $self->mode . '.yml' );
 
     $self->config( YAML::LoadFile($file) );
     $self->has_config(1);
 }
 
+sub set_dbh {
+    my ($self) = @_;
 
+    $self->dbh( dicty::DBH->new() );
+    my $config = $self->config->{database};
+
+    Modware::DataSource::Chado->connect(
+        dsn      => $config->{dsn},
+        user     => $config->{user},
+        password => $config->{pwd},
+        attr     => $config->{attr}
+    );
+    $self->schema( Modware::DataSource::Chado->handler );
+}
 1;

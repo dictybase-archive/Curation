@@ -8,9 +8,5 @@ use base 'Mojolicious::Controller';
 
 # Module implementation
 #
-sub index {
-    my ($self, $c) = @_;
-   # $self->redirect_to('/curation/genes');
-}
 
 1;

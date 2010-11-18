@@ -4,7 +4,7 @@
     var Event = YAHOO.util.Event;
     
     YAHOO.Dicty.GeneCuration = function() {
-        //var logger = new YAHOO.widget.LogReader();
+       // var logger = new YAHOO.widget.LogReader();
     };
 
     YAHOO.Dicty.GeneCuration.prototype.init = function(id) {
@@ -12,25 +12,8 @@
         this.autoload = 'autoload';
         this.qualifier = 'qualifier'; 
         this.tab = 'tab';   
-            
-        var autoloadNodes = Dom.getElementsByClassName(this.autoload);
-        for (var i in autoloadNodes) {
-            var args = [autoloadNodes[i].id];
-            YAHOO.util.Connect.asyncRequest('GET', '/curation/gene/' + this.geneID + '/' + autoloadNodes[i].id,
-            {
-                success: function(obj) {
-                    Dom.get(obj.argument[0]).innerHTML = obj.responseText;
-                    var tabNodes = Dom.getElementsByClassName(this.tab);
-                    for (var j in tabNodes){
-                        new YAHOO.widget.TabView(tabNodes[j].id);
-                        Dom.removeClass(tabNodes[j], this.tab);
-                    }
-                },
-                failure: this.onFailure,
-                scope: this,
-                argument : args
-            });
-        }
+        
+        this.loadAutoloads();
             
         this.curationApproveButtonEl = 'curation-approve';
         this.curationImpossibleButtonEl = 'curation-impossible';
@@ -67,10 +50,10 @@
                 postData += qualifierNodes[i].id + '=' + 1 + '&';
             }
         }
-        var featuresPost = '';
+        var featuresPost;
         for (var i in featureNodes) {     
             if (featureNodes[i].checked){
-                featuresPost += featureNodes[i].id + '+';
+                featuresPost = featureNodes[i].id;
             }
         }
         postData = postData + 'feature=' + featuresPost;
@@ -122,7 +105,26 @@
     
         YAHOO.util.Connect.asyncRequest('DELETE', '/cache/gene/' + this.geneID);
     };
-
+    YAHOO.Dicty.GeneCuration.prototype.loadAutoloads = function() {
+        var autoloadNodes = Dom.getElementsByClassName(this.autoload);
+        for (var i in autoloadNodes) {
+            var args = [autoloadNodes[i].id];
+            YAHOO.util.Connect.asyncRequest('GET', '/curation/gene/' + this.geneID + '/' + autoloadNodes[i].id,
+            {
+                success: function(obj) {
+                    Dom.get(obj.argument[0]).innerHTML = obj.responseText;
+                    var tabNodes = Dom.getElementsByClassName(this.tab);
+                    for (var j in tabNodes){
+                        new YAHOO.widget.TabView(tabNodes[j].id);
+                        Dom.removeClass(tabNodes[j], this.tab);
+                    }
+                },
+                failure: this.onFailure,
+                scope: this,
+                argument : args
+            });
+        }
+    }
 })();
 
 function initGeneCuration(v) {

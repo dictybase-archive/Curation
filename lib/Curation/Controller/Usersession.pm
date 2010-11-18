@@ -9,7 +9,6 @@ use File::Spec::Functions;
 use base 'Mojolicious::Controller';
 
 # Module implementation
-#
 
 sub login {
     my ($self) = @_;
@@ -23,32 +22,35 @@ sub logout {
 }
 
 sub validate {
-    my ( $self, $c ) = @_;
-
+    my ($self) = @_;
     $self->redirect_to('/curation/login') if !$self->session('initials');
     return 1;
 }
 
 sub create {
-    my ( $self ) = @_;
- 
-    my $password = $self->req->param('password') || '';
-    my $username = $self->req->param('username') || '';
-    
-    my $dbfile = catfile( $self->app->home->rel_dir('db'), $self->app->config->{database} );
+    my ($self) = @_;
+
+    my $password = $self->req->param('password');
+    my $username = $self->req->param('username');
+
+    $self->redirect_to('/curation/login') if !( $password & $username );
+
+    my $dbfile = catfile( $self->app->home->rel_dir('db'),
+        $self->app->config->{database}->{login} );
     my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbfile", '', '' );
-        
-    my $sql = 'SELECT initials FROM users WHERE name like ? and password like ?;';
+
+    my $sql =
+        'SELECT initials FROM users WHERE name like ? and password like ?;';
     my $sth = $dbh->prepare($sql);
     $sth->execute( $username, $password );
-    
+
     my $initials = $sth->fetchrow();
-    
-    $self->app->log->debug('login: ' . $initials);
+
+    $self->app->log->debug( 'login: ' . $initials );
 
     $self->redirect_to('/curation/login') if !$initials;
-        
-    $self->session( initials => $initials, username => $username);
+
+    $self->session( initials => $initials, username => $username );
     $self->redirect_to('/curation/');
 }
 

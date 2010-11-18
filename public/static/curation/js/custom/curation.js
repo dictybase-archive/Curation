@@ -38,7 +38,7 @@
 
         this.curationReferenceButton = new YAHOO.widget.Button({
             container: this.curationReferenceButtonEl,
-            label: 'Create',
+            label: 'Curate',
             type: 'button',
             id: 'curation-reference-button',
             onclick: {
@@ -53,22 +53,11 @@
 
     YAHOO.Dicty.Curation.prototype.curateGene = function(id) {
         location.replace('/curation/gene/' + id);
-        return false;
-        
+        return false;   
     };
     YAHOO.Dicty.Curation.prototype.curateReference = function(id) {
-        YAHOO.util.Connect.asyncRequest('POST', '/curation/reference/new/',
-        {
-            success: function(obj) {
-                this.helpPanel.setHeader("Reference Curation");
-                helpPanel.setBody(obj.responseText);
-                helpPanel.render(document.body);
-                this.helpPanel.cfg.setProperty('visible',true);
-            },
-            failure: this.onFailure,
-            scope: this
-        },
-        id);
+        location.replace('/curation/reference/' + id);
+        return false;   
     };
     YAHOO.Dicty.Curation.prototype.onFailure = function(obj) {
         //alert(obj.statusText);
