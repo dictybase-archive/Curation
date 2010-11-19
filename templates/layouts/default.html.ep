@@ -30,6 +30,8 @@
         <script type="text/javascript" src="/static/curation/js/yui//build/element/element-beta-min.js"></script>
         <script type="text/javascript" src="/static/curation/js/yui/build/button/button-min.js"></script>
         <script type="text/javascript" src="/static/curation/js/yui/build/logger/logger-min.js"></script>
+        <script type="text/javascript" src="/static/curation/js/yui/build/json/json-min.js"></script>
+        
         <script type="text/javascript" src="/static/curation/js/custom/gene.js"></script>
         <script type="text/javascript" src="/static/curation/js/custom/reference.js"></script>
         <script type="text/javascript" src="/static/curation/js/custom/curation.js"></script>

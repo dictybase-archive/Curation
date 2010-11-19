@@ -1,42 +1,52 @@
 % layout 'default';
 
-<div id="container-blank">
-    <%= stash('abbreviation') . '.' if stash('abbreviation') %>
-    <%= stash('year') if stash('volume')%>
-    <%= ';' . stash('volume') if stash('abbreviation') && stash('volume') %>
-    <%= ':' . stash('pages')  if stash('abbreviation') && stash('pages') %>
-    <% if (stash 'created') { %>
-        <span class="highlighted">Newly created</span>
-    <% } %>
-    <h3><%= stash 'title' %></h3>
-    <p><%= stash 'authors' %></p>
+<div class="reference">
+    <div id="container-blank">
+        <%= stash('abbreviation') . '.' if stash('abbreviation') %>
+        <%= stash('year') if stash('volume')%>
+        <%= ';' . stash('volume') if stash('abbreviation') && stash('volume') %>
+        <%= ':' . stash('pages')  if stash('abbreviation') && stash('pages') %>
+        <% if (stash 'created') { %>
+            <span class="highlighted">Newly created</span>
+        <% } %>
+        <h3><%= stash 'title' %></h3>
+        <p><%= stash 'authors' %></p>
     
-    <p><%= stash 'abstract' %></p>
-</div>
-<div id="curation-reference">
-    <div id="genes-link" class="input-column narrow">
-        <label for="genes-link-list">Genes to link</label>
-        <textarea id="genes-link-list">Paste IDs here  ......
-    	</textarea>
-        <span id="genes-link-button"></span>    	
+        <p><%= stash 'abstract' %></p>
     </div>
-    <div id="linked" class="input-column narrow">
-        <label for="genes-link-list">Genes already linked</label>
-        <select id="genes-linked" multiple="multiple">
-            <% foreach my $gene ( @{stash('linked')} ) { %>
-                <option 
-                    class="<%= $gene->{curated} ? '' : 'highlighted' %>" 
-                    value="<%= $gene->{id} %>"><%= $gene->{name} %>
-                </option>
-            <% } %>
-        </select>
-        <span id="select-all-button"></span>
-        <span id="clear-selection-button"></span>
+    <div id="curation-reference">
+        <div id="genes-link" class="input-column narrow">
+            <label for="genes-link-list">Genes to link</label>
+            <textarea id="genes-link-list">Paste IDs here  ......
+        	</textarea>
+        </div>
+        <div id="linked" class="input-column narrow">
+            <label for="genes-link-list">Genes already linked</label>
+            <select id="genes-linked" multiple="multiple">
+                <% foreach my $gene ( @{stash('linked')} ) { %>
+                    <option 
+                        class="<%= $gene->{curated} ? '' : 'highlighted' %>" 
+                        value="<%= $gene->{id} %>"><%= $gene->{name} %>
+                    </option>
+                <% } %>
+            </select>
+            <span id="select-all-button"></span>
+            <span id="clear-selection-button"></span>
+        </div>
+        <div id="topics" class="input-column">
+            <%= $self->render_partial('reference/topics'); %>
+        </div>
+    </div>
+    <div class="input-column narrow">
+        <span id="genes-link-button"></span> 
+    </div>
+    <div class="input-column narrow">   	
         <span id="genes-unlink-button"></span>
     </div>
-    <div id="topics" class="input-column">
-        <%= $self->render_partial('reference/topics'); %>
+    <div class="input-column narrow">   	
+        <span id="add-topics-button"></span>
     </div>
+
 </div>
 <script>
     YAHOO.util.Event.onDOMReady(function(){ initReferenceCuration("<%= $self->stash('id') %>") });

@@ -76,11 +76,21 @@ sub startup {
 
     $bridge->route('reference/:id/')
         ->to( 'reference#show', format => 'html' );
-    $bridge->route('reference/:id/:gene_id/')->via('post')
-        ->to( 'reference#link_gene', format => 'html' );
-    $bridge->route('reference/:id/:gene_id/')->via('delete')
-        ->to( 'reference#unlink_gene', format => 'html' );
+    $bridge->route('reference/:id/')->via('delete')
+        ->to( 'reference#delete', format => 'html' );
         
+    $bridge->route('reference/:id/gene/:gene_id/')->via('post')
+        ->to( 'reference#link_gene', format => 'html' );
+    $bridge->route('reference/:id/gene/:gene_id/')->via('delete')
+        ->to( 'reference#unlink_gene', format => 'html' );
+    
+    $bridge->route('reference/:id/gene/:gene_id/topics/')->via('get')
+        ->to( 'reference#get_topics', format => 'json' );
+    $bridge->route('reference/:id/gene/:gene_id/topics/')->via('post')
+        ->to( 'reference#add_topic', format => 'html' );    
+    $bridge->route('reference/:id/gene/:gene_id/topics/:topic')->via('delete')
+        ->to( 'reference#delete_topic', format => 'html' ); 
+
     # config file setup
     $self->set_config;
 

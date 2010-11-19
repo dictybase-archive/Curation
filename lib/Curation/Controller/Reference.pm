@@ -17,32 +17,37 @@ sub show {
     my $ref      = $self->get_reference;
     my $genes_rs = $self->get_linked_genes($ref);
 
-    my $curated_rs = $genes_rs->search(
-        {   'type_2.name' => 'Curated',
-            'cv.name'     => 'dictyBase_literature_topic'
-        },
-        {   join => {
-                'feature_pubs' => { 'feature_pubprops' => { 'type' => 'cv' } }
-            }
+    my $sub_rs = $genes_rs->search(
+        { 'cv.name' => 'dictyBase_literature_topic' },
+        {   join => [
+                'dbxref',
+                {   'feature_pubs' =>
+                        { 'feature_pubprops' => { 'type' => 'cv' } }
+                }
+            ],
         }
     );
     my $not_curated_rs = $genes_rs->search(
-        {   'type_2.name' => 'Not yet curated',
-            'cv.name'     => 'dictyBase_literature_topic'
-        },
-        {   join => {
-                'feature_pubs' => { 'feature_pubprops' => { 'type' => 'cv' } }
-            }
+        {   feature_id =>
+                { 'NOT IN' => $sub_rs->get_column('feature_id')->as_query },
         }
     );
-    my @linked;
-    map { push @linked, $_ } map {
-        { id => $_->dbxref->accession, name => $_->name, curated => 1 }
-    } $curated_rs->all;
+    my $curated_rs = $genes_rs->search(
+        {   feature_id =>
+                { 'IN' => $sub_rs->get_column('feature_id')->as_query },
+        }
+    );
 
-    map { push @linked, $_ } map {
+    my @linked;
+    map { push @linked, $_ }
+        map {
+        { id => $_->dbxref->accession, name => $_->name, curated => 1 }
+        } $curated_rs->all;
+
+    map { push @linked, $_ }
+        map {
         { id => $_->dbxref->accession, name => $_->name, curated => 0 }
-    } $not_curated_rs->all;
+        } $not_curated_rs->all;
 
     my $author_count = $ref->total_authors;
     my $author_str;
@@ -73,7 +78,7 @@ sub show {
     $year =~ s{-}{ }g if $year;
 
     $self->stash( linkout      => $config->{linkout} );
-    $self->stash( abstract     => $ref->abstract );
+    $self->stash( abstract     => $ref->abstract ) if $ref->has_abstract;
     $self->stash( year         => $year ) if $year;
     $self->stash( authors      => $author_str );
     $self->stash( pages        => $pages ) if $pages;
@@ -82,6 +87,17 @@ sub show {
     $self->stash( abbreviation => $ref->abbreviation )
         if $ref->has_abbreviation;
     $self->stash( linked => \@linked );
+}
+
+sub delete {
+    my ($self) = @_;
+    my $ref = $self->get_reference;
+    eval { $ref->delete; };
+    $self->render(
+        text   => 'error deleting reference' . $self->stash('id') . $@,
+        status => 500
+    ) if $@;
+    $self->render( text => 'deleted reference ' . $self->stash('id') );
 }
 
 sub get_reference {
@@ -115,7 +131,7 @@ sub create_pubmed {
         if $citation->journal->abbreviation;
     $ref->first_page( $citation->first_page ) if $citation->first_page;
     $ref->last_page( $citation->last_page )   if $citation->last_page;
-    $ref->abstract( $citation->abstract );
+    $ref->abstract( $citation->abstract )     if $citation->abstract;
 
     #    $ref->full_text_url( $citation->full_text_url );
 
@@ -133,7 +149,7 @@ sub create_pubmed {
     }
     $self->stash( created => 1 );
 
-    #$ref->create;
+    $ref->create;
     return $ref;
 }
 
@@ -151,11 +167,11 @@ sub get_linked_genes {
     );
 }
 
-sub link_gene {
-    my ($self)  = @_;
-    my $ref     = $self->get_reference;
+sub get_gene {
+    my ($self) = @_;
     my $gene_id = $self->stash('gene_id');
 
+    return if !$gene_id;
     my ($gene) = dicty::Search::Gene->find(
         -name       => $gene_id,
         -id         => $gene_id,
@@ -166,15 +182,24 @@ sub link_gene {
         text   => 'no gene with name or id ' . $gene_id . ' found',
         status => 500
     ) if !$gene;
+    return $gene;
+}
+
+sub link_gene {
+    my ($self) = @_;
+    my $ref    = $self->get_reference;
+    my $gene   = $self->get_gene;
 
     eval { $gene->add_reference($ref); $gene->_update_reference_links; };
 
     $self->render(
         text => 'error linking reference '
             . $self->stash('id')
-            . " with gene $gene_id : $@",
+            . " with gene "
+            . $gene->name . " : $@",
         status => 500
     ) if $@;
+
     $self->render( text => 'successfully linked '
             . $self->stash('id')
             . " with gene "
@@ -182,32 +207,76 @@ sub link_gene {
 }
 
 sub unlink_gene {
-    my ($self)  = @_;
-    my $ref     = $self->get_reference;
-    my $gene_id = $self->stash('gene_id');
-
-    my ($gene) = dicty::Search::Gene->find(
-        -name       => $gene_id,
-        -id         => $gene_id,
-        -clause     => 'OR',
-        -is_deleted => 'false'
-    );
-    $self->render(
-        text   => 'no gene with name or id ' . $gene_id . ' found',
-        status => 500
-    ) if !$gene;
+    my ($self) = @_;
+    my $ref    = $self->get_reference;
+    my $gene   = $self->get_gene;
 
     eval { $gene->remove_reference($ref); $gene->_update_reference_links; };
 
     $self->render(
         text => 'error unlinking reference '
             . $self->stash('id')
-            . " with gene $gene_id : $@",
+            . " with gene "
+            . $gene->name . " : $@",
         status => 500
     ) if $@;
     $self->render( text => 'successfully unlinked '
             . $self->stash('id')
             . " with gene "
+            . $gene->name );
+}
+
+sub get_topics {
+    my ($self) = @_;
+    my $ref    = $self->get_reference;
+    my $gene   = $self->get_gene;
+
+    my $topics = $gene->topics_by_reference($ref);
+    $self->render( json => $topics );
+}
+
+sub add_topic {
+    my ($self) = @_;
+    my $ref    = $self->get_reference;
+    my $gene   = $self->get_gene;
+    my $topic  = $self->req->params('topic');
+
+    eval { $gene->add_topic_by_reference( $ref, [$topic] ); $gene->update; };
+    $self->render(
+        text => 'error adding topic' 
+            . $topic
+            . ' for gene '
+            . $gene->name . " : $@",
+        status => 500
+    ) if $@;
+
+    $self->render( text => 'successfully added topic ' 
+            . $topic
+            . ' for gene '
+            . $gene->name );
+}
+
+sub delete_topic {
+    my ($self) = @_;
+    my $ref    = $self->get_reference;
+    my $gene   = $self->get_gene;
+    my $topic  = $self->req->params('topic');
+
+    eval {
+        $gene->remove_topic_by_reference( $ref, [$topic] );
+        $gene->update;
+    };
+    $self->render(
+        text => 'error removing topic' 
+            . $topic
+            . ' for gene '
+            . $gene->name . " : $@",
+        status => 500
+    ) if $@;
+
+    $self->render( text => 'successfully removed topic ' 
+            . $topic
+            . ' for gene '
             . $gene->name );
 }
 

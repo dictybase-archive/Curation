@@ -1,41 +1,44 @@
-#curation-reference .input-column {
+.reference .input-column {
     float:          left;
     margin-top:     5px;
     margin-bottom:  0px;
 }
-#curation-reference .narrow {
+.reference .narrow {
     width:          150px;
     margin-left:    0px;
     margin-right:   20px;
 }
-#curation-reference button {
+.reference .yui-button button {
     width:          150px;
 }
-#curation-reference span#genes-add {
+.reference span#genes-add {
     margin-left:    1px;
 }
-#curation-reference textarea, select {
+.reference textarea, select {
     height:         350px;
     width:          150px;
     margin:         0;
     padding:        0;
     line-height:    1em;
 }
-#curation-reference label {
+.reference label {
     font-weight:    bold;
     margin:         5px 0 5px 0;
     float:          left;
 }
-#curation-reference .yui-button {
+.reference .yui-button {
     margin: 1px;
 }
-#curation-reference input {
+.reference input {
     margin-left: 0;
 }
-#curation-reference td {
+.reference td {
     vertical-align: top;
 }
-#curation-reference th {
+.reference th {
     border-bottom:  1px solid;
     padding:        5px 0;
+}
+.reference div#container-blank {
+    min-width:      880px;
 }
