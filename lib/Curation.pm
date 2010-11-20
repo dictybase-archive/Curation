@@ -86,6 +86,10 @@ sub startup {
     
     $bridge->route('reference/:id/gene/:gene_id/topics/')->via('get')
         ->to( 'reference#get_topics', format => 'json' );
+    $bridge->route('reference/:id/gene/:gene_id/topics/')->via('put')
+        ->to( 'reference#update_topics', format => 'html' );    
+
+    ## not used any more, moved to bulk update from one-by-one
     $bridge->route('reference/:id/gene/:gene_id/topics/')->via('post')
         ->to( 'reference#add_topic', format => 'html' );    
     $bridge->route('reference/:id/gene/:gene_id/topics/:topic')->via('delete')

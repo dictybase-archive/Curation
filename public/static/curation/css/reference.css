@@ -27,10 +27,10 @@
     float:          left;
 }
 .reference .yui-button {
-    margin: 1px;
+    margin:         1px;
 }
 .reference input {
-    margin-left: 0;
+    margin-left:    0;
 }
 .reference td {
     vertical-align: top;
@@ -39,6 +39,7 @@
     border-bottom:  1px solid;
     padding:        5px 0;
 }
-.reference div#container-blank {
-    min-width:      880px;
+div.reference {
+    min-width:      950px;
+    min-height:     770px;
 }

@@ -7,6 +7,7 @@ use Bio::Biblio::IO;
 use dicty::Search::Gene;
 use Modware::Publication::DictyBase;
 use Modware::Publication::Author;
+use JSON;
 
 # Other modules:
 use base 'Mojolicious::Controller';
@@ -235,11 +236,54 @@ sub get_topics {
     $self->render( json => $topics );
 }
 
+sub update_topics {
+    my ($self) = @_;
+    my $ref    = $self->get_reference;
+    my $gene   = $self->get_gene;
+    my $topics = $self->req->content->asset->slurp;
+    
+    $self->app->log->debug($topics);
+    $self->render_exception('no topics provided') if !$topics;
+    
+    my %existng_topics;
+    my %updated_topics;
+    
+    %existng_topics = map { $_ => 1 } @{ $gene->topics_by_reference($ref) } if $gene->topics_by_reference($ref); 
+    %updated_topics = map { $_ => 1 } @{ jsonToObj($topics) } if $topics ne '[]';
+    
+    foreach my $topic (keys %updated_topics){
+        if (exists $existng_topics{key}) {
+            delete $existng_topics{key};
+            delete $updated_topics{key};
+        }
+    }
+    
+    eval {
+        $gene->add_topic_by_reference( $ref, [keys %updated_topics] );
+        $gene->remove_topic_by_reference( $ref, [keys %existng_topics] );
+        $gene->update;
+    };
+    $self->render(
+        text => 'error updating topics' 
+            . $topics
+            . ' for gene '
+            . $gene->name . " : $@",
+        status => 500
+    ) if $@;
+
+    $self->render( text => 'successfully updated topics ' 
+            . $topics
+            . ' for gene '
+            . $gene->name );
+}
+
+## not used any more, moved to bulk update from one-by-one
 sub add_topic {
     my ($self) = @_;
     my $ref    = $self->get_reference;
     my $gene   = $self->get_gene;
-    my $topic  = $self->req->params('topic');
+    my $topic  = uri_unescape($self->req->params('topic'));
+    $topic =~ s{\+}{ }g;
 
     eval { $gene->add_topic_by_reference( $ref, [$topic] ); $gene->update; };
     $self->render(

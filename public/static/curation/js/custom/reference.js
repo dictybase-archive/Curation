@@ -4,7 +4,7 @@
     var Event = YAHOO.util.Event;
     
     YAHOO.Dicty.ReferenceCuration = function() {
-       var logger = new YAHOO.widget.LogReader();
+       //var logger = new YAHOO.widget.LogReader();
     };
 
     YAHOO.Dicty.ReferenceCuration.prototype.init = function(id) {
@@ -68,7 +68,7 @@
             type: 'button',
             id: 'add-topics',
             onclick: {
-                fn: function(){ this.addTopics(); },
+                fn: function(){ this.updateTopics(); },
                 scope: this
             }
         });
@@ -76,26 +76,32 @@
             width: "500px",
             visible: false,
             modal: true,
-            fixedcenter: false,
+            fixedcenter: true,
             zIndex: 3
         });
         this.helpPanel.setHeader("Gene Curation");
         this.helpPanel.setBody("");
         this.helpPanel.render(document.body);
+        this.helpPanelCloseButton = Dom.getElementsByClassName('container-close','a');
         
-        YAHOO.util.Event.addListener(this.linkGenesList.id, "click", function() {
-            var initData = Dom.get('genes-link-list').value;
-            if (initData.match('Paste')) {
-                Dom.get('genes-link-list').value = '';
-            }
+        YAHOO.util.Event.addListener( this.linkGenesList.id, "click", this.cleanGenesLink, this, this);
+        YAHOO.util.Event.addListener( this.linkedGenesList, "change", this.selectTopics, this, this);
+        YAHOO.util.Event.addListener( this.helpPanelCloseButton, "click", function(){
+            window.location.reload();
         });
 
-        YAHOO.util.Event.addListener( this.linkedGenesList, "change", this.selectTopics, this, this);
         this.clearTopicsSelection();
+        this.clearGenesSelection();
+    };
+    YAHOO.Dicty.ReferenceCuration.prototype.cleanGenesLink = function(f) {
+        var initData = Dom.get('genes-link-list').value;
+        
+        if (initData.match('Paste')) {
+            Dom.get('genes-link-list').value = '';
+        }
     };
     YAHOO.Dicty.ReferenceCuration.prototype.selectTopics = function() {
         var ids = this.getSelectedGenes();
-        YAHOO.log('here');
         if (ids.length > 1) {
             this.clearTopicsSelection();
         }
@@ -159,19 +165,15 @@
     };
     YAHOO.Dicty.ReferenceCuration.prototype.getTopicsForGene = function(id) {
         this.waiting = 1;
-        this.waitingPanel;
+        this.waitingPanel();
         
         YAHOO.util.Connect.asyncRequest('GET', '/curation/reference/' + this.referenceID + '/gene/' + id + '/topics/',
         {
             success: function(obj) {
                 this.clearTopicsSelection();
-                var topics = YAHOO.lang.JSON.parse(obj.responseText);
-                YAHOO.log(this.topicCheckboxes);
-                
+                var topics = YAHOO.lang.JSON.parse(obj.responseText);                
                 for (var i in topics){
-                    YAHOO.log(topics[i], 'error');
                     for (var j in this.topicCheckboxes) {
-                        YAHOO.log(this.topicCheckboxes[j].value + ':' + topics[i], 'error');
                         if (this.topicCheckboxes[j].value == topics[i]){
                             this.topicCheckboxes[j].checked = true;
                         }
@@ -183,6 +185,56 @@
             scope: this
         });
     };
+    YAHOO.Dicty.ReferenceCuration.prototype.updateTopics = function() {
+        var ids = this.getSelectedGenes();
+        var topics = this.getSelectedTopics();
+        
+        this.waitingPanel();
+        this.waiting = ids.length;
+        
+        for (var i in ids) {  
+            YAHOO.util.Connect.asyncRequest('PUT', '/curation/reference/' + this.referenceID + '/gene/' + ids[i] + '/topics/',
+            {
+                success: this.logResponce,
+                failure: this.logResponce,
+                scope: this
+            },
+            YAHOO.lang.JSON.stringify(topics));
+        }
+    };
+    YAHOO.Dicty.ReferenceCuration.prototype.getSelectedGenes = function() {
+        var ids = [];
+        var linkedGenes = this.linkedGenesList.options;
+   
+        for (var i in linkedGenes){
+            if ( linkedGenes[i].selected) {
+                ids.push(linkedGenes[i].value);
+            }
+        }
+        return ids;
+    };
+    YAHOO.Dicty.ReferenceCuration.prototype.selectAllTopics = function() {
+        for (var i in this.topicCheckboxes){
+            this.topicCheckboxes[i].checked = true;
+        }
+    };
+    YAHOO.Dicty.ReferenceCuration.prototype.clearTopicsSelection = function() {
+        for (var i in this.topicCheckboxes){
+            this.topicCheckboxes[i].checked = false;
+        }
+    };
+    YAHOO.Dicty.ReferenceCuration.prototype.getSelectedTopics = function() {
+        var ids = [];
+        for (var i in this.topicCheckboxes){
+            if ( this.topicCheckboxes[i].checked) {
+                ids.push(this.topicCheckboxes[i].value);
+            }
+        }
+        return ids;
+    };
+
+/*  not used any more, moved to bulk update from one-by-one
+
     YAHOO.Dicty.ReferenceCuration.prototype.addTopics = function() {
 //        this.waitingPanel();
         var ids = this.getSelectedGenes();
@@ -220,36 +272,9 @@
             }
         }
     };
-    YAHOO.Dicty.ReferenceCuration.prototype.getSelectedGenes = function() {
-        var ids = [];
-        var linkedGenes = this.linkedGenesList.options;
-   
-        for (var i in linkedGenes){
-            if ( linkedGenes[i].selected) {
-                ids.push(linkedGenes[i].value);
-            }
-        }
-        return ids;
-    };
-    YAHOO.Dicty.ReferenceCuration.prototype.getSelectedTopics = function() {
-        var ids = [];
-        for (var i in this.topicCheckboxes){
-            if ( this.topicCheckboxes[i].checked) {
-                ids.push(this.topicCheckboxes[i].value);
-            }
-        }
-        return ids;
-    };
-    YAHOO.Dicty.ReferenceCuration.prototype.selectAllTopics = function() {
-        for (var i in this.topicCheckboxes){
-            this.topicCheckboxes[i].checked = true;
-        }
-    };
-    YAHOO.Dicty.ReferenceCuration.prototype.clearTopicsSelection = function() {
-        for (var i in this.topicCheckboxes){
-            this.topicCheckboxes[i].checked = false;
-        }
-    };
+
+*/
+
 })();
 
 function initReferenceCuration(v) {

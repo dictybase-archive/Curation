@@ -17,7 +17,7 @@
     <div id="curation-reference">
         <div id="genes-link" class="input-column narrow">
             <label for="genes-link-list">Genes to link</label>
-            <textarea id="genes-link-list">Paste IDs here  ......
+            <textarea id="genes-link-list">Paste IDs here......
         	</textarea>
         </div>
         <div id="linked" class="input-column narrow">
@@ -38,13 +38,13 @@
         </div>
     </div>
     <div class="input-column narrow">
-        <span id="genes-link-button"></span> 
+        <span class="curation" id="genes-link-button"></span> 
     </div>
     <div class="input-column narrow">   	
-        <span id="genes-unlink-button"></span>
+        <span class="curation" id="genes-unlink-button"></span>
     </div>
     <div class="input-column narrow">   	
-        <span id="add-topics-button"></span>
+        <span class="curation" id="add-topics-button"></span>
     </div>
 
 </div>
