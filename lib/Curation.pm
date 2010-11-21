@@ -26,7 +26,7 @@ sub startup {
     # default log level
     $self->log->level('debug');
 
-    # Note that you should use a custom secret to make signed cookies really secure.
+# Note that you should use a custom secret to make signed cookies really secure.
     $self->secret('dicty4ever');
     $self->session->cookie_path('/curation');
     $self->session->cookie_name('dictybasecuration');
@@ -49,12 +49,9 @@ sub startup {
 
     my $bridge = $router->bridge('curation')->to('usersession#validate');
 
-    $bridge->route('')
-        ->to( 'curation#index', format => 'html' );
-    $bridge->route('genes')
-        ->to( 'gene#index', format => 'html' );
-    $bridge->route('gene/:id')
-        ->to( 'gene#show', format => 'html' );
+    $bridge->route('')->to( 'curation#index', format => 'html' );
+    $bridge->route('genes')->to( 'gene#index', format => 'html' );
+    $bridge->route('gene/:id')->to( 'gene#show', format => 'html' );
     $bridge->route('gene/:id/fasta')->via('get')
         ->to( 'gene#fasta', format => 'html' );
     $bridge->route('gene/:id/gbrowse')->via('get')
@@ -77,23 +74,23 @@ sub startup {
     $bridge->route('reference/:id/')
         ->to( 'reference#show', format => 'html' );
     $bridge->route('reference/:id/')->via('delete')
-        ->to( 'reference#delete', format => 'html' );
-        
+        ->to('reference#delete');
+
     $bridge->route('reference/:id/gene/:gene_id/')->via('post')
-        ->to( 'reference#link_gene', format => 'html' );
+        ->to('reference#link_gene');
     $bridge->route('reference/:id/gene/:gene_id/')->via('delete')
-        ->to( 'reference#unlink_gene', format => 'html' );
-    
+        ->to('reference#unlink_gene');
+
     $bridge->route('reference/:id/gene/:gene_id/topics/')->via('get')
         ->to( 'reference#get_topics', format => 'json' );
     $bridge->route('reference/:id/gene/:gene_id/topics/')->via('put')
-        ->to( 'reference#update_topics', format => 'html' );    
+        ->to('reference#update_topics');
 
     ## not used any more, moved to bulk update from one-by-one
     $bridge->route('reference/:id/gene/:gene_id/topics/')->via('post')
-        ->to( 'reference#add_topic', format => 'html' );    
+        ->to('reference#add_topic');
     $bridge->route('reference/:id/gene/:gene_id/topics/:topic')->via('delete')
-        ->to( 'reference#delete_topic', format => 'html' ); 
+        ->to('reference#delete_topic');
 
     # config file setup
     $self->set_config;

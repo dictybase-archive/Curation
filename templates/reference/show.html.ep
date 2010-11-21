@@ -2,10 +2,13 @@
 
 <div class="reference">
     <div id="container-blank">
-        <%= stash('abbreviation') . '.' if stash('abbreviation') %>
-        <%= stash('year') if stash('volume')%>
-        <%= ';' . stash('volume') if stash('abbreviation') && stash('volume') %>
-        <%= ':' . stash('pages')  if stash('abbreviation') && stash('pages') %>
+        <%= stash('journal') . '.' if stash('journal') %>
+        <%= stash('year') if stash('year')%>
+        <% if (stash('journal')){ %>
+            <%= ';' . stash('volume') if stash('volume') %>
+            <%= '(' . stash('issue') . ')' if stash('issue') %>
+            <%= ':' . stash('pages')  if stash('pages') %>
+        <% } %>
         <% if (stash 'created') { %>
             <span class="highlighted">Newly created</span>
         <% } %>

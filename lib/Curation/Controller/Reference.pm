@@ -2,7 +2,7 @@ package Curation::Controller::Reference;
 
 use warnings;
 use strict;
-use Bio::Biblio;
+use Bio::DB::EUtilities;
 use Bio::Biblio::IO;
 use dicty::Search::Gene;
 use Modware::Publication::DictyBase;
@@ -72,21 +72,19 @@ sub show {
         $author_str .= $ref->get_from_authors(-1)->last_name;
     }
 
-    my $pages = $ref->has_pages ? $ref->pages : undef;
-    $pages =~ s/\-\-/\-/ if $pages;
-
     my $year = $ref->year;
     $year =~ s{-}{ }g if $year;
 
-    $self->stash( linkout      => $config->{linkout} );
-    $self->stash( abstract     => $ref->abstract ) if $ref->has_abstract;
-    $self->stash( year         => $year ) if $year;
-    $self->stash( authors      => $author_str );
-    $self->stash( pages        => $pages ) if $pages;
-    $self->stash( title        => $ref->title ) if $ref->has_title;
-    $self->stash( volume       => $ref->volume ) if $ref->has_volume;
-    $self->stash( abbreviation => $ref->abbreviation )
-        if $ref->has_abbreviation;
+    $self->stash( linkout  => $config->{linkout} );
+    $self->stash( abstract => $ref->abstract ) if $ref->has_abstract;
+    $self->stash( year     => $year ) if $year;
+    $self->stash( authors  => $author_str );
+    $self->stash( pages    => $ref->pages ) if $ref->has_pages;
+    $self->stash( title    => $ref->title ) if $ref->has_title;
+    $self->stash( volume   => $ref->volume ) if $ref->has_volume;
+    $self->stash( issue    => $ref->issue ) if $ref->has_issue;
+    $self->stash( journal  => $ref->journal )
+        if $ref->has_journal;
     $self->stash( linked => \@linked );
 }
 
@@ -110,12 +108,39 @@ sub get_reference {
 
 sub create_pubmed {
     my ($self) = @_;
-    my $citation =
-        Bio::Biblio->new( -access => 'pubmed' )
-        ->get_by_id( $self->stash('id') );
+    my $citation;
+    my $url;
+    eval {
+        my $eutils = Bio::DB::EUtilities->new(
+            -eutil => 'efetch',
+            -db    => 'pubmed',
+            -id    => $self->stash('id')
+        );
+
+        my $in = Bio::Biblio::IO->new(
+            -data   => $eutils->get_Response->content,
+            -format => 'medlinexml'
+        );
+        $citation = $in->next_bibref;
+        
+        $eutils->reset_parameters(
+            -eutil  => 'elink',
+            -dbfrom => 'pubmed',
+            -cmd    => 'prlinks',
+            -id     => $self->stash('id')
+        );
+
+        my $ls = $eutils->next_LinkSet;
+        my $linkout = $ls->next_UrlLink;
+        $url = $linkout->get_url;
+    };
+    $self->render(
+        text   => 'error retrieving pubmed ' . $self->stash('id') . ": $@",
+        status => 500
+    ) if $@ || !$citation;
 
     my $source = 'PUBMED';
-    my $type   = 'journal_article';
+    my $type   = 'journal article';
 
     my $ref =
         Modware::Publication::DictyBase->new( id => $self->stash('id') );
@@ -129,12 +154,11 @@ sub create_pubmed {
 
     $ref->issue( $citation->issue ) if $citation->issue;
     $ref->journal( $citation->journal->abbreviation )
-        if $citation->journal->abbreviation;
-    $ref->first_page( $citation->first_page ) if $citation->first_page;
-    $ref->last_page( $citation->last_page )   if $citation->last_page;
-    $ref->abstract( $citation->abstract )     if $citation->abstract;
-
-    #    $ref->full_text_url( $citation->full_text_url );
+        if $citation->journal && $citation->journal->abbreviation;
+    $ref->pages( $citation->medline_page )
+        if $citation->medline_page;
+    $ref->abstract( $citation->abstract ) if $citation->abstract;
+    $ref->full_text_url($url);
 
     my $count = 1;
     for my $person ( @{ $citation->authors } ) {
@@ -149,7 +173,6 @@ sub create_pubmed {
 
     }
     $self->stash( created => 1 );
-
     $ref->create;
     return $ref;
 }
@@ -212,7 +235,10 @@ sub unlink_gene {
     my $ref    = $self->get_reference;
     my $gene   = $self->get_gene;
 
-    eval { $gene->remove_reference($ref); $gene->_update_reference_links; };
+    eval {
+        $gene->remove_reference($ref);
+        $gene->_update_reference_links;
+    };
 
     $self->render(
         text => 'error unlinking reference '
@@ -241,26 +267,29 @@ sub update_topics {
     my $ref    = $self->get_reference;
     my $gene   = $self->get_gene;
     my $topics = $self->req->content->asset->slurp;
-    
+
     $self->app->log->debug($topics);
     $self->render_exception('no topics provided') if !$topics;
-    
+
     my %existng_topics;
     my %updated_topics;
-    
-    %existng_topics = map { $_ => 1 } @{ $gene->topics_by_reference($ref) } if $gene->topics_by_reference($ref); 
-    %updated_topics = map { $_ => 1 } @{ jsonToObj($topics) } if $topics ne '[]';
-    
-    foreach my $topic (keys %updated_topics){
-        if (exists $existng_topics{key}) {
+
+    %existng_topics =
+        map { $_ => 1 } @{ $gene->topics_by_reference($ref) }
+        if $gene->topics_by_reference($ref);
+    %updated_topics = map { $_ => 1 } @{ jsonToObj($topics) }
+        if $topics ne '[]';
+
+    foreach my $topic ( keys %updated_topics ) {
+        if ( exists $existng_topics{key} ) {
             delete $existng_topics{key};
             delete $updated_topics{key};
         }
     }
-    
+
     eval {
-        $gene->add_topic_by_reference( $ref, [keys %updated_topics] );
-        $gene->remove_topic_by_reference( $ref, [keys %existng_topics] );
+        $gene->add_topic_by_reference( $ref,    [ keys %updated_topics ] );
+        $gene->remove_topic_by_reference( $ref, [ keys %existng_topics ] );
         $gene->update;
     };
     $self->render(
@@ -282,10 +311,13 @@ sub add_topic {
     my ($self) = @_;
     my $ref    = $self->get_reference;
     my $gene   = $self->get_gene;
-    my $topic  = uri_unescape($self->req->params('topic'));
+    my $topic  = uri_unescape( $self->req->params('topic') );
     $topic =~ s{\+}{ }g;
 
-    eval { $gene->add_topic_by_reference( $ref, [$topic] ); $gene->update; };
+    eval {
+        $gene->add_topic_by_reference( $ref, [$topic] );
+        $gene->update;
+    };
     $self->render(
         text => 'error adding topic' 
             . $topic
