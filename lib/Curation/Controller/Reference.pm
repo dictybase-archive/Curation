@@ -31,12 +31,14 @@ sub show {
     my $not_curated_rs = $genes_rs->search(
         {   feature_id =>
                 { 'NOT IN' => $sub_rs->get_column('feature_id')->as_query },
-        }
+        },
+        { order_by => { -asc => 'me.name' } }
     );
     my $curated_rs = $genes_rs->search(
         {   feature_id =>
                 { 'IN' => $sub_rs->get_column('feature_id')->as_query },
-        }
+        },
+        { order_by => { -asc => 'me.name' } }
     );
 
     my @linked;
@@ -122,7 +124,7 @@ sub create_pubmed {
             -format => 'medlinexml'
         );
         $citation = $in->next_bibref;
-        
+
         $eutils->reset_parameters(
             -eutil  => 'elink',
             -dbfrom => 'pubmed',
@@ -130,7 +132,7 @@ sub create_pubmed {
             -id     => $self->stash('id')
         );
 
-        my $ls = $eutils->next_LinkSet;
+        my $ls      = $eutils->next_LinkSet;
         my $linkout = $ls->next_UrlLink;
         $url = $linkout->get_url;
     };
