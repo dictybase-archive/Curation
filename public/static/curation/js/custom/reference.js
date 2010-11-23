@@ -4,7 +4,7 @@
     var Event = YAHOO.util.Event;
     
     YAHOO.Dicty.ReferenceCuration = function() {
-       //var logger = new YAHOO.widget.LogReader();
+       var logger = new YAHOO.widget.LogReader();
     };
 
     YAHOO.Dicty.ReferenceCuration.prototype.init = function(id) {
@@ -18,13 +18,15 @@
         this.clearGenesSelectionButtonEl = 'clear-selection-button';
         this.addTopicsButtonEl = 'add-topics-button';
         this.topicCheckboxes = Dom.getElementsByClassName('topics', 'input');
+        this.deleteLink = Dom.get('remove-reference');
+        console.log(this.deleteLink);
         
         this.waiting = 0;
         this.message = '';
         
         this.linkGenesButton = new YAHOO.widget.Button({
             container: this.linkGenesButtonEl,
-            label: 'Link',
+            label: 'Link genes',
             type: 'button',
             id: 'genes-link',
             onclick: {
@@ -34,7 +36,7 @@
         });
         this.unlinkGenesButton = new YAHOO.widget.Button({
             container: this.unlinkGenesButtonEl,
-            label: 'Unlink selected',
+            label: 'Unlink selected genes',
             type: 'button',
             id: 'genes-unlink',
             onclick: {
@@ -54,7 +56,7 @@
         });
         this.clearGenesSelectionButton = new YAHOO.widget.Button({
             container: this.clearGenesSelectionButtonEl,
-            label: 'Clear selection',
+            label: 'Clear genes selection',
             type: 'button',
             id: 'clear-selection',
             onclick: {
@@ -64,7 +66,7 @@
         });
         this.addTopicsButton = new YAHOO.widget.Button({
             container: this.addTopicsButtonEl,
-            label: 'Add topics to selected',
+            label: 'Update topics for selected genes',
             type: 'button',
             id: 'add-topics',
             onclick: {
@@ -79,17 +81,19 @@
             fixedcenter: true,
             zIndex: 3
         });
-        this.helpPanel.setHeader("Gene Curation");
+        this.helpPanel.setHeader("Reference Curation");
         this.helpPanel.setBody("");
         this.helpPanel.render(document.body);
         this.helpPanelCloseButton = Dom.getElementsByClassName('container-close','a');
-        
-        YAHOO.util.Event.addListener( this.linkGenesList.id, "click", this.cleanGenesLink, this, this);
+
+        YAHOO.util.Event.addListener( this.linkGenesList, "click", this.cleanGenesLink, this, this);
         YAHOO.util.Event.addListener( this.linkedGenesList, "change", this.selectTopics, this, this);
+        YAHOO.util.Event.removeListener(this.deleteLink, "click");
+        YAHOO.util.Event.addListener( this.deleteLink, "click", this.deleteReference, this, this);
         YAHOO.util.Event.addListener( this.helpPanelCloseButton, "click", function(){
             window.location.reload();
         });
-
+        
         this.clearTopicsSelection();
         this.clearGenesSelection();
     };
@@ -113,7 +117,6 @@
         this.message += '<br/>' + obj.responseText;
         this.waiting--;
         if (this.waiting === 0) {
-            //this.helpPanel.hideEvent(window.location.reload());
             this.helpPanel.setBody(this.message);
             this.helpPanel.show();
             this.message = '';
@@ -231,6 +234,33 @@
             }
         }
         return ids;
+    };
+    YAHOO.Dicty.ReferenceCuration.prototype.deleteReference = function() {
+        this.exitPanel = new YAHOO.widget.Panel("exitPanel", {
+            width: "500px",
+            visible: true,
+            modal: true,
+            fixedcenter: true,
+            zIndex: 3
+        });
+
+        this.exitPanel.setHeader("Deleting Reference");
+        this.exitPanel.setBody("Please wait <img src=\"http://l.yimg.com/a/i/us/per/gr/gp/rel_interstitial_loading.gif\"/>");
+        this.exitPanel.render(document.body);
+        this.exitPanel.show();
+        this.exitPanel.hideEvent.subscribe( function(){ window.location ='/curation/' });
+
+        YAHOO.util.Connect.asyncRequest('DELETE', '/curation/reference/' + this.referenceID,
+        {
+            success: function(obj){
+                this.exitPanel.setBody('Reference deleted from database');
+            },
+            failure: function(obj){
+                this.exitPanel.setBody('Error deleting reference: ' + obj.responseText);
+            },
+            scope: this
+        });
+        
     };
 
 /*  not used any more, moved to bulk update from one-by-one

@@ -43,3 +43,6 @@ div.reference {
     min-width:      950px;
     min-height:     770px;
 }
+.reference .wide .yui-button button {
+    width:          615px;
+}

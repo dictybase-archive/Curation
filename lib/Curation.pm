@@ -71,7 +71,7 @@ sub startup {
     $bridge->route('gene/:id/skip')
         ->to( 'gene#skip', format => 'html' );
 
-    $bridge->route('reference/:id/')
+    $bridge->route('reference/:id/')->via('get')
         ->to( 'reference#show', format => 'html' );
     $bridge->route('reference/:id/')->via('delete')
         ->to('reference#delete');

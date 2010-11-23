@@ -10,11 +10,12 @@
             <%= ':' . stash('pages')  if stash('pages') %>
         <% } %>
         <% if (stash 'created') { %>
-            <span class="highlighted">Newly created</span>
+            | <span class="highlighted">Newly created</span>
         <% } %>
+        | <a href="#" id="remove-reference" class="highlighted">Delete</a>
+        
         <h3><%= stash 'title' %></h3>
         <p><%= stash 'authors' %></p>
-    
         <p><%= stash 'abstract' %></p>
     </div>
     <div id="curation-reference">
@@ -40,16 +41,17 @@
             <%= $self->render_partial('reference/topics'); %>
         </div>
     </div>
-    <div class="input-column narrow">
-        <span class="curation" id="genes-link-button"></span> 
+    <div style="clear:both;">
+        <div class="input-column narrow">
+            <span class="curation" id="genes-link-button"></span> 
+        </div>
+        <div class="input-column narrow">   	
+            <span class="curation" id="genes-unlink-button"></span>
+        </div>
+        <div class="input-column narrow">   	
+            <span class="curation wide" id="add-topics-button"></span>
+        </div>
     </div>
-    <div class="input-column narrow">   	
-        <span class="curation" id="genes-unlink-button"></span>
-    </div>
-    <div class="input-column narrow">   	
-        <span class="curation" id="add-topics-button"></span>
-    </div>
-
 </div>
 <script>
     YAHOO.util.Event.onDOMReady(function(){ initReferenceCuration("<%= $self->stash('id') %>") });
