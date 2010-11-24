@@ -9,6 +9,9 @@
             <%= '(' . stash('issue') . ')' if stash('issue') %>
             <%= ':' . stash('pages')  if stash('pages') %>
         <% } %>
+        <% if (stash 'pubmed') { %>
+            | PMID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/<%= stash 'pubmed' %>"><%= stash 'pubmed' %></a>
+        <% } %>
         <% if (stash 'created') { %>
             | <span class="highlighted">Newly created</span>
         <% } %>

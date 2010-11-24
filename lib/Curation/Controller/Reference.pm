@@ -85,6 +85,7 @@ sub show {
     $self->stash( title    => $ref->title ) if $ref->has_title;
     $self->stash( volume   => $ref->volume ) if $ref->has_volume;
     $self->stash( issue    => $ref->issue ) if $ref->has_issue;
+    $self->stash( pubmed   => $ref->pubmed_id ) if $ref->pubmed_id;
     $self->stash( journal  => $ref->journal )
         if $ref->has_journal;
     $self->stash( linked => \@linked );
