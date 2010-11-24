@@ -4,7 +4,7 @@
     var Event = YAHOO.util.Event;
     
     YAHOO.Dicty.ReferenceCuration = function() {
-       var logger = new YAHOO.widget.LogReader();
+       //var logger = new YAHOO.widget.LogReader();
     };
 
     YAHOO.Dicty.ReferenceCuration.prototype.init = function(id) {
@@ -19,7 +19,6 @@
         this.addTopicsButtonEl = 'add-topics-button';
         this.topicCheckboxes = Dom.getElementsByClassName('topics', 'input');
         this.deleteLink = Dom.get('remove-reference');
-        console.log(this.deleteLink);
         
         this.waiting = 0;
         this.message = '';
@@ -86,11 +85,11 @@
         this.helpPanel.render(document.body);
         this.helpPanelCloseButton = Dom.getElementsByClassName('container-close','a');
 
-        YAHOO.util.Event.addListener( this.linkGenesList, "click", this.cleanGenesLink, this, this);
-        YAHOO.util.Event.addListener( this.linkedGenesList, "change", this.selectTopics, this, this);
-        YAHOO.util.Event.removeListener(this.deleteLink, "click");
-        YAHOO.util.Event.addListener( this.deleteLink, "click", this.deleteReference, this, this);
-        YAHOO.util.Event.addListener( this.helpPanelCloseButton, "click", function(){
+        Event.addListener( this.linkGenesList, "click", this.cleanGenesLink, this, this);
+        Event.addListener( this.linkedGenesList, "change", this.selectTopics, this, this);
+        Event.removeListener(this.deleteLink, "click");
+        Event.addListener( this.deleteLink, "click", this.deleteReference, this, this);
+        Event.addListener( this.helpPanelCloseButton, "click", function(){
             window.location.reload();
         });
         
@@ -248,7 +247,7 @@
         this.exitPanel.setBody("Please wait <img src=\"http://l.yimg.com/a/i/us/per/gr/gp/rel_interstitial_loading.gif\"/>");
         this.exitPanel.render(document.body);
         this.exitPanel.show();
-        this.exitPanel.hideEvent.subscribe( function(){ window.location ='/curation/' });
+        this.exitPanel.hideEvent.subscribe( function(){ window.location ='/curation/'; });
 
         YAHOO.util.Connect.asyncRequest('DELETE', '/curation/reference/' + this.referenceID,
         {

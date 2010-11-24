@@ -15,11 +15,13 @@
     margin-left:    1px;
 }
 .reference textarea, select {
-    height:         350px;
     width:          150px;
     margin:         0;
     padding:        0;
     line-height:    1em;
+}
+.reference textarea, select[multiple] {
+    height:         350px;
 }
 .reference label {
     font-weight:    bold;
@@ -45,4 +47,10 @@ div.reference {
 }
 .reference .wide .yui-button button {
     width:          615px;
+}
+input[type="radio"]{
+    margin-left:    0;
+}
+.id-input {
+    width: 160px;
 }

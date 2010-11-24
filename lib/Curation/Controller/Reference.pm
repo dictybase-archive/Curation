@@ -103,20 +103,41 @@ sub delete {
 
 sub get_reference {
     my ($self) = @_;
-    my $ref = Modware::Publication::DictyBase->find_by_pubmed_id(
-        $self->stash('id') );
-    return $ref || $self->create_pubmed;
+    my $ref;
+    eval {
+        $ref = Modware::Publication::DictyBase->find_by_pub_id(
+            $self->stash('id') );
+    };
+    return $ref
+        || $self->render_exception(
+        'Reference not found: ' . $self->stash('id') );
+}
+
+sub get_pubmed {
+    my ($self) = @_;
+    my $ref;
+    eval {
+        $ref = Modware::Publication::DictyBase->find_by_pubmed_id(
+            $self->stash('pubmed_id') );
+    };
+    $ref ||= $self->create_pubmed;
+    $self->app->log->debug($ref->pub_id);
+    $self->redirect_to( '/curation/reference/' . $ref->pub_id );
 }
 
 sub create_pubmed {
     my ($self) = @_;
     my $citation;
     my $url;
+
+    $self->render_exception('pubmed id is not provided')
+        if !$self->stash('pubmed_id');
+
     eval {
         my $eutils = Bio::DB::EUtilities->new(
             -eutil => 'efetch',
             -db    => 'pubmed',
-            -id    => $self->stash('id')
+            -id    => $self->stash('pubmed_id')
         );
 
         my $in = Bio::Biblio::IO->new(
@@ -129,15 +150,16 @@ sub create_pubmed {
             -eutil  => 'elink',
             -dbfrom => 'pubmed',
             -cmd    => 'prlinks',
-            -id     => $self->stash('id')
+            -id     => $self->stash('pubmed_id')
         );
 
         my $ls      = $eutils->next_LinkSet;
         my $linkout = $ls->next_UrlLink;
-        $url = $linkout->get_url;
+        $url = $linkout->get_url if $linkout;
     };
     $self->render(
-        text   => 'error retrieving pubmed ' . $self->stash('id') . ": $@",
+        text => 'error retrieving pubmed '
+            . $self->stash('pubmed_id') . ": $@",
         status => 500
     ) if $@ || !$citation;
 
@@ -145,7 +167,8 @@ sub create_pubmed {
     my $type   = 'journal article';
 
     my $ref =
-        Modware::Publication::DictyBase->new( id => $self->stash('id') );
+        Modware::Publication::DictyBase->new(
+        id => $self->stash('pubmed_id') );
 
     $ref->source($source);
     $ref->type($type);
@@ -160,7 +183,7 @@ sub create_pubmed {
     $ref->pages( $citation->medline_page )
         if $citation->medline_page;
     $ref->abstract( $citation->abstract ) if $citation->abstract;
-    $ref->full_text_url($url);
+    $ref->full_text_url($url) if $url;
 
     my $count = 1;
     for my $person ( @{ $citation->authors } ) {

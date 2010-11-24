@@ -6,20 +6,31 @@
             <td>
                 Curate gene
             </td>
-            <td>
-                <input id="gene-id"/>
+            <td> 
+                <input id="gene-id" class="id-input"/>
+            </td>
+            <td>                
                 <span id="curation-gene"/></span>
             </td>
         </tr>
-
         <tr>
             <td>
                 Curate reference
             </td>
             <td>
-                <input id="pubmed-id"/>
+                <input id="reference-id" class="id-input"/>
+            </td>
+            <td>
                 <span id="curation-reference"/></span>
             </td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td> 
+                <input type="radio" name="reference-id-type" class="reference-id-type" value="reference_no"/>reference_no
+                <input type="radio" name="reference-id-type" class="reference-id-type" value="pubmed"/>pubmed
+            </td>
+            <td>&nbsp;</td>
         </tr>
     </table>
 </div>
