@@ -198,8 +198,7 @@ sub create_pubmed {
 
     }
     $self->stash( created => 1 );
-    $ref->create;
-    return $ref;
+    return $ref->create;
 }
 
 sub get_linked_genes {
