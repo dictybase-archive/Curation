@@ -40,6 +40,7 @@ sub show {
         },
         { order_by => { -asc => 'me.name' } }
     );
+    
 
     my @linked;
     map { push @linked, $_ }
@@ -121,8 +122,10 @@ sub get_pubmed {
         $ref = Modware::Publication::DictyBase->find_by_pubmed_id(
             $self->stash('pubmed_id') );
     };
-    $ref ||= $self->create_pubmed;
-    $self->app->log->debug($ref->pub_id);
+    $self->render_exception(
+        'reference with pubmed ' . $self->stash('pubmed_id') 
+        . 'not found' )
+        if !$ref;
     $self->redirect_to( '/curation/reference/' . $ref->pub_id );
 }
 
@@ -199,7 +202,8 @@ sub create_pubmed {
 
     }
     $self->stash( created => 1 );
-    return $ref->create;
+    my $new_ref = $ref->create;
+    $self->redirect_to( '/curation/reference/' . $new_ref->pub_id );
 }
 
 sub get_linked_genes {

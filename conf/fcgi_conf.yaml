@@ -5,20 +5,20 @@
   nproc:            2
   pidfile:         "/tmp/curation.pid"
   socket:          "/tmp/curation.socket"
-  additional_args: ['-e',  'development']
+  additional_args: ['-E',  'development']
 - name:            "staging.server"
   server_class:    "FCGI::Engine::Manager::Server::Plackup"
-  scriptname:      "script/curation_staging.psgi"
+  scriptname:      "script/curation.psgi"
   nproc:            2
   pidfile:         "/tmp/curation.pid"
   socket:          "/tmp/curation.socket"
-  additional_args: ['-e',  'production']
+  additional_args: ['-E',  'production']
 - name:            "production.server"
   server_class:    "FCGI::Engine::Manager::Server::Plackup"
-  scriptname:      "script/curation_prod.psgi"
+  scriptname:      "script/curation.psgi"
   nproc:            3
   pidfile:         "/tmp/curation.pid"
   socket:          "/tmp/curation.socket"
-  additional_args: ['-e',  'production']
+  additional_args: ['-E',  'production']
 
 

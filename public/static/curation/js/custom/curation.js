@@ -75,7 +75,16 @@
     };
     YAHOO.Dicty.Curation.prototype.curateReference = function(id,type) {
         if (type == 'pubmed'){
-            location.replace('/curation/reference/pubmed/' + id);
+            YAHOO.util.Connect.asyncRequest('GET', '/curation/reference/pubmed/' + id,
+            {
+                success: function(){
+                    location.replace('/curation/reference/pubmed/' + id);
+                },
+                failure: function(){
+                    YAHOO.util.Connect.asyncRequest('POST', '/curation/reference/pubmed/' + id);
+                },
+                scope: this
+            });
         }
         if (type == 'reference_no'){
             location.replace('/curation/reference/' + id);
