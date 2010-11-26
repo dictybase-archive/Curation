@@ -81,7 +81,14 @@
                     location.replace('/curation/reference/pubmed/' + id);
                 },
                 failure: function(){
-                    YAHOO.util.Connect.asyncRequest('POST', '/curation/reference/pubmed/' + id);
+                    YAHOO.util.Connect.asyncRequest('POST', '/curation/reference/pubmed/' + id,
+                    {
+                        success: function(){
+                            location.replace('/curation/reference/pubmed/' + id);
+                        },
+                        failure: this.onFailure,
+                        scope: this
+                    });
                 },
                 scope: this
             });
@@ -92,7 +99,10 @@
         return false;   
     };
     YAHOO.Dicty.Curation.prototype.onFailure = function(obj) {
-        //alert(obj.statusText);
+        this.helpPanel.setHeader('Curation Error');
+        this.helpPanel.setBody(obj.responseText);
+        this.helpPanel.show();
+
     };
     YAHOO.Dicty.Curation.prototype.validateInput = function(v){
         if (v == undefined || v.match(/\d/) == undefined){
