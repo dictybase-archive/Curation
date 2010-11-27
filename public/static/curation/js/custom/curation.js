@@ -3,7 +3,7 @@
     var Dom = YAHOO.util.Dom;
 
     YAHOO.Dicty.Curation = function() {
-       // var logger = new YAHOO.widget.LogReader();
+        var logger = new YAHOO.widget.LogReader();
     };
 
     YAHOO.Dicty.Curation.prototype.init = function() {
@@ -13,6 +13,7 @@
         this.curationGeneButtonEl = 'curation-gene';
         this.idTypeCheckboxes = Dom.getElementsByClassName('reference-id-type', 'input');
 
+        // hepl panel used mostly for warnings and error messages
         this.helpPanel = new YAHOO.widget.Panel("helpPanel", {
             width: "500px",
             modal: true,
@@ -22,6 +23,41 @@
         });
         this.helpPanel.setBody('');
         this.helpPanel.render(document.body);
+        
+        // simle dialog used when user confirmation is needed, as of now for confirming pubmed create action
+        this.createPubmedDialog = new YAHOO.widget.SimpleDialog("dlg", { 
+            width: "30em", 
+            effect:{
+                effect: YAHOO.widget.ContainerEffect.FADE,
+                duration: 0.25
+            }, 
+            fixedcenter: true,
+            modal: true,
+            visible: false,
+            draggable: false
+        });
+        
+        var handleYes = function() {
+            YAHOO.util.Connect.asyncRequest('POST', '/curation/reference/pubmed/' + this.pubmed_id,
+            {
+                success: function(){
+                    location.replace('/curation/reference/pubmed/' + this.pubmed_id);
+                },
+                failure: function(){},
+                scope: this
+            });
+//            this.hide();
+        };
+        var myButtons = [
+            { text: "Yes", handler: handleYes },
+            { text: "Cancel", handler: function(){ this.hide(); }, isDefault:true}
+        ];
+        
+        this.createPubmedDialog.setHeader("Warning!");
+        this.createPubmedDialog.setBody("provided PubMed ID was not found in database, do you want to create new reference?");
+        this.createPubmedDialog.cfg.setProperty("icon", YAHOO.widget.SimpleDialog.ICON_WARN);
+        this.createPubmedDialog.cfg.queueProperty("buttons", myButtons);
+        this.createPubmedDialog.render(document.body);
 
         this.curationGeneButton = new YAHOO.widget.Button({
             container: this.curationGeneButtonEl,
@@ -66,7 +102,7 @@
                 },
                 scope: this
             }
-        });
+        });        
     };
 
     YAHOO.Dicty.Curation.prototype.curateGene = function(id) {
@@ -81,14 +117,8 @@
                     location.replace('/curation/reference/pubmed/' + id);
                 },
                 failure: function(){
-                    YAHOO.util.Connect.asyncRequest('POST', '/curation/reference/pubmed/' + id,
-                    {
-                        success: function(){
-                            location.replace('/curation/reference/pubmed/' + id);
-                        },
-                        failure: this.onFailure,
-                        scope: this
-                    });
+                    this.createPubmedDialog.pubmed_id = id;
+                    this.createPubmedDialog.show();
                 },
                 scope: this
             });

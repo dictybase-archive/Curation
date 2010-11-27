@@ -201,7 +201,6 @@ sub create_pubmed {
         );
 
     }
-    $self->stash( created => 1 );
     my $new_ref = $ref->create;
     $self->redirect_to( '/curation/reference/' . $new_ref->pub_id );
 }
