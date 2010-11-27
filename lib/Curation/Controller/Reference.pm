@@ -126,7 +126,7 @@ sub get_pubmed {
         'reference with pubmed ' . $self->stash('pubmed_id') 
         . 'not found' )
         if !$ref;
-    $self->redirect_to( '/curation/reference/' . $ref->pub_id );
+    $self->redirect_to( '/curation/reference/' . $ref->pub_id ) if $ref;
 }
 
 sub create_pubmed {

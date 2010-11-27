@@ -80,8 +80,7 @@ sub startup {
         ->to( 'reference#get_pubmed', format => 'html' );
 
     $bridge->route('reference/pubmed/:pubmed_id/')->via('post')
-        ->to( 'reference#create_pubmed');
-
+        ->to( 'reference#create_pubmed', format => 'html' );
 
     $bridge->route('reference/:id/gene/:gene_id/')->via('post')
         ->to('reference#link_gene');
