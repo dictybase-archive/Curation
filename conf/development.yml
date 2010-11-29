@@ -39,13 +39,6 @@ gene:
             - type   : EST
               style  : text-decoration: underline
               subfeature : nucleotide_match
-            - type   : RNAseq
-              style  : UPPERCASE
-              sourcedb : 
-                  dsn : dbi:mysql:host=192.168.4.53;database=seqfeature
-                  adaptor : DBI::mysql
-                  user : caboose
-                  pass : gmodmaster
             - type   : pseudogene
               style  : BGCOLOR lightgrey
               subfeature : pseudogenic_exon

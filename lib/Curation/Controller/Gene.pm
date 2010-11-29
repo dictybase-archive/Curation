@@ -706,7 +706,9 @@ sub clone {
         $new_feature = Chado::Feature->create(
             {   organism_id => $source_feature->organism_id,
                 type_id     => $source_feature->type_id,
-                uniquename  => $uniquename
+                uniquename  => $uniquename,
+                created_by  => $self->session('username'),
+                modified_by => $self->session('username'),
             }
         );
         $new_feature->dbxref_id($dbxref_id) if $dbxref_id;

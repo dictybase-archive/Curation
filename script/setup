@@ -39,5 +39,5 @@ $dbh->do($create_sql) or die "DBI::str for $create_sql";
 my $user_insert_sql = 'INSERT INTO users (name, password, initials) values (?,?,?);';
 my $sth = $dbh->prepare($user_insert_sql);
 $sth->execute('CGM_DDB_PFEY', 'tul2um4', 'PF');
-$sth->execute('PGAUDET', 'PGAUDET12345', 'PG');
-$sth->execute('RDDODSON', 'RDODSON12345', 'RD');
+$sth->execute('CGM_DDB_PASC', 'PGAUDET12345', 'PG');
+$sth->execute('CGM_DDB_BOBD', 'RDODSON12345', 'RD');
