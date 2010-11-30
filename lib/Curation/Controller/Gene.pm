@@ -374,9 +374,24 @@ sub curation {
         $types->{$id}->{name} = $id . ' (' . $identifier . ')';
         $types->{$id}->{default} = 1 if $identifier eq $default;
     }
+    my @notes = map { $_->value . ' [public]' } Chado::Featureprop->search(
+        {   feature_id => $feature->feature_id,
+            type_id =>
+                Chado::Cvterm->get_single_row( { name => 'public note' } )
+                ->cvterm_id,
+        }
+    );
+    push @notes, map { $_->value . ' [private]' } Chado::Featureprop->search(
+        {   feature_id => $feature->feature_id,
+            type_id =>
+                Chado::Cvterm->get_single_row( { name => 'private note' } )
+                ->cvterm_id,
+        }
+    );
 
     $self->stash( types      => $types );
     $self->stash( qualifiers => $config->{qualifiers} );
+    $self->stash( notes => \@notes ) if @notes;
 }
 
 ## --- Curation part

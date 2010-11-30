@@ -2,10 +2,10 @@
     <form id="curation-form">
         <table class="content-table">
             <tr> 
-                <% if ($self->stash('types')) { %>
+                <% if (stash('types')) { %>
                     <td class="title">Features</td>
                 <% } %>
-                <% foreach my $qualifier (@{$self->stash('qualifiers')}) { %>
+                <% foreach my $qualifier (@{ stash('qualifiers') }) { %>
                     <td class="title"><%= $qualifier->{'name'} %></td>
                 <% } %>                            
             </tr>
@@ -13,8 +13,8 @@
                 <% if ($self->stash('types')) { %>
                     <td>
                         <ul>
-                            <% foreach my $id (keys %{$self->stash('types')}) { %>
-                                <% my $value = $self->stash('types')->{$id}; %>
+                            <% foreach my $id (keys %{ stash('types') }) { %>
+                                <% my $value = stash('types')->{$id}; %>
                                 <li>
                                     <input class="feature" name="feature" id="<%= $value->{id} %>" type="radio" value="T" <%= $value->{default} ? 'checked="checked"' : '' %>/>
                                     <label for="<%= $value->{id} %>"><%= $value->{name} %></label>
@@ -23,7 +23,7 @@
                         </ul>
                     </td>
                 <% } %>
-                <% foreach my $qualifier (@{$self->stash('qualifiers')}) { %>
+                <% foreach my $qualifier (@{ stash('qualifiers') }) { %>
                     <% my $default = $qualifier->{default} || ''; %>
                     <td>
                         <ul>
@@ -38,10 +38,23 @@
                     </td>
                 <% } %>
             </tr>
+            <% if (stash('notes')) { %>
+                <tr><th  colspan="4">Notes</th></tr>
+                <tr>
+                    <td colspan="4">
+                        <ul>
+                            <% foreach my $note ( @{stash('notes')} ) { %>
+                                <li>- <%= $note %></li>
+                            <% } %>
+                        </ul>
+                    </td>      
+                </tr>
+            <% } %>
             <tr><th  colspan="4">
                 <span id="curation-approve"/></span>
                 <span id="curation-impossible"/></span>
             </th></tr>
+
         </table>                            
     </form>
 </div>
