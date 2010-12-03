@@ -17,9 +17,11 @@ sub show {
     my $config   = $self->app->config->{reference};
     my $ref      = $self->get_reference;
     my $genes_rs = $self->get_linked_genes($ref);
+    
+    my $topics_namespace = 'dictyBase_literature_topic';
 
     my $sub_rs = $genes_rs->search(
-        { 'cv.name' => 'dictyBase_literature_topic' },
+        { 'cv.name' => $topics_namespace },
         {   join => [
                 'dbxref',
                 {   'feature_pubs' =>
@@ -41,7 +43,6 @@ sub show {
         { order_by => { -asc => 'me.name' } }
     );
     
-
     my @linked;
     map { push @linked, $_ }
         map {
@@ -75,6 +76,25 @@ sub show {
         $author_str .= $ref->get_from_authors(-1)->last_name;
     }
 
+    ## get topics by category
+    my $root_topic = $self->app->schema->resultset('Cv::Cvterm')->find(
+        {   'cvterm_relationship_subjects.subject_id' => undef,
+            'is_obsolete'                            => 0,
+            'is_relationshiptype'                    => 0,
+            'cv.name'                                => $topics_namespace
+        },
+        { join => ['cvterm_relationship_subjects', 'cv'] }
+    );
+    my $topics;
+    foreach
+        my $group ( $root_topic->search_related('cvterm_relationship_objects')
+        ->search_related('subject')->all ) {
+        push @{ $topics->{ $group->name } },
+            map { $_->name }
+            $group->search_related('cvterm_relationship_objects')
+            ->search_related('subject')->all;
+    }
+    
     my $year = $ref->year;
     $year =~ s{-}{ }g if $year;
 
@@ -90,6 +110,7 @@ sub show {
     $self->stash( journal  => $ref->journal )
         if $ref->has_journal;
     $self->stash( linked => \@linked );
+    $self->stash( topics => $topics );
 }
 
 sub delete {
