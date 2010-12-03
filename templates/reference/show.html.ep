@@ -10,12 +10,9 @@
             <%= ':' . stash('pages')  if stash('pages') %>
         <% } %>
         <% if (stash 'pubmed') { %>
-            | PMID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/<%= stash 'pubmed' %>"><%= stash 'pubmed' %></a>
+            | PMID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/<%= stash 'pubmed' %>"><%= stash 'pubmed' %></a> |
         <% } %>
-        <% if (stash 'created') { %>
-            | <span class="highlighted">Newly created</span>
-        <% } %>
-        | <a href="#" id="remove-reference" class="highlighted">Delete</a>
+        <a href="#" id="remove-reference" class="highlighted">Delete</a>
         
         <h3><%= stash 'title' %></h3>
         <p><%= stash 'authors' %></p>

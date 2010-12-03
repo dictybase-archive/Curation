@@ -1,6 +1,10 @@
 % my $limit = 3;
 <table class="topics">
-    <% my @groups = sort {scalar @{$topics->{$b}} <=> scalar @{$topics->{$a}}} keys %{$topics}; %>
+    <% my @groups = 
+        sort { scalar @{$topics->{$b}} <=> scalar @{$topics->{$a}} } 
+        grep { scalar @{$topics->{$_}} > 0 } 
+        keys %{$topics}; 
+    %>
     <% while (@groups > 0){  %>
         <% my @subs = splice(@groups, 0, $limit); %>
         <tr> 
