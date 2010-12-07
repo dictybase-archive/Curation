@@ -117,6 +117,7 @@ sub delete {
     my ($self) = @_;
     my $ref = $self->get_reference;
     eval { $ref->delete; };
+    $self->app->log->error($@) if $@;
     $self->render(
         text   => 'error deleting reference' . $self->stash('id') . $@,
         status => 500
@@ -182,6 +183,8 @@ sub create_pubmed {
         my $linkout = $ls->next_UrlLink;
         $url = $linkout->get_url if $linkout;
     };
+    
+    $self->app->log->error($@) if $@;
     $self->render(
         text => 'error retrieving pubmed '
             . $self->stash('pubmed_id') . ": $@",
@@ -264,7 +267,7 @@ sub link_gene {
     my $gene   = $self->get_gene;
 
     eval { $gene->add_reference($ref); $gene->_update_reference_links; };
-
+    $self->app->log->error($@) if $@;
     $self->render(
         text => 'error linking reference '
             . $self->stash('id')
@@ -288,7 +291,7 @@ sub unlink_gene {
         $gene->remove_reference($ref);
         $gene->_update_reference_links;
     };
-
+    $self->app->log->error($@) if $@;
     $self->render(
         text => 'error unlinking reference '
             . $self->stash('id')
@@ -296,6 +299,7 @@ sub unlink_gene {
             . $gene->name . " : $@",
         status => 500
     ) if $@;
+    
     $self->render( text => 'successfully unlinked '
             . $self->stash('id')
             . " with gene "
@@ -317,7 +321,6 @@ sub update_topics {
     my $gene   = $self->get_gene;
     my $topics = $self->req->content->asset->slurp;
 
-    $self->app->log->debug($topics);
     $self->render_exception('no topics provided') if !$topics;
 
     my %existng_topics;
@@ -341,6 +344,7 @@ sub update_topics {
         $gene->remove_topic_by_reference( $ref, [ keys %existng_topics ] );
         $gene->update;
     };
+    $self->app->log->error($@) if $@;
     $self->render(
         text => 'error updating topics' 
             . $topics
@@ -367,6 +371,7 @@ sub add_topic {
         $gene->add_topic_by_reference( $ref, [$topic] );
         $gene->update;
     };
+    $self->app->log->error($@) if $@;
     $self->render(
         text => 'error adding topic' 
             . $topic
@@ -391,6 +396,7 @@ sub delete_topic {
         $gene->remove_topic_by_reference( $ref, [$topic] );
         $gene->update;
     };
+    $self->app->log->error($@) if $@;
     $self->render(
         text => 'error removing topic' 
             . $topic
