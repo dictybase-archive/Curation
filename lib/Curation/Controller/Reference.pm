@@ -17,7 +17,7 @@ sub show {
     my $config   = $self->app->config->{reference};
     my $ref      = $self->get_reference;
     my $genes_rs = $self->get_linked_genes($ref);
-    
+
     my $topics_namespace = 'dictyBase_literature_topic';
 
     my $sub_rs = $genes_rs->search(
@@ -42,7 +42,7 @@ sub show {
         },
         { order_by => { -asc => 'me.name' } }
     );
-    
+
     my @linked;
     map { push @linked, $_ }
         map {
@@ -79,11 +79,11 @@ sub show {
     ## get topics by category
     my $root_topic = $self->app->schema->resultset('Cv::Cvterm')->find(
         {   'cvterm_relationship_subjects.subject_id' => undef,
-            'is_obsolete'                            => 0,
-            'is_relationshiptype'                    => 0,
-            'cv.name'                                => $topics_namespace
+            'is_obsolete'                             => 0,
+            'is_relationshiptype'                     => 0,
+            'cv.name'                                 => $topics_namespace
         },
-        { join => ['cvterm_relationship_subjects', 'cv'] }
+        { join => [ 'cvterm_relationship_subjects', 'cv' ] }
     );
     my $topics;
     foreach
@@ -94,7 +94,7 @@ sub show {
             $group->search_related('cvterm_relationship_objects')
             ->search_related('subject')->all;
     }
-    
+
     my $year = $ref->year;
     $year =~ s{-}{ }g if $year;
 
@@ -106,8 +106,9 @@ sub show {
     $self->stash( title    => $ref->title ) if $ref->has_title;
     $self->stash( volume   => $ref->volume ) if $ref->has_volume;
     $self->stash( issue    => $ref->issue ) if $ref->has_issue;
-    $self->stash( pubmed   => $ref->pubmed_id ) if $ref->pubmed_id && $ref->pubmed_id =~ m{^\d$};
-    $self->stash( journal  => $ref->journal )
+    $self->stash( pubmed   => $ref->pubmed_id )
+        if $ref->pubmed_id && $ref->pubmed_id =~ m{^(\d+)$};
+    $self->stash( journal => $ref->journal )
         if $ref->has_journal;
     $self->stash( linked => \@linked );
     $self->stash( topics => $topics );
@@ -116,7 +117,13 @@ sub show {
 sub delete {
     my ($self) = @_;
     my $ref = $self->get_reference;
+
+    ## clean cache for genes linked to reference
+    map     { $self->app->utils->clean_cache($_) }
+        map { $_->dbxref->accession } $self->get_linked_genes($ref)->all;
+
     eval { $ref->delete; };
+
     $self->app->log->error($@) if $@;
     $self->render(
         text   => 'error deleting reference' . $self->stash('id') . $@,
@@ -145,8 +152,7 @@ sub get_pubmed {
             $self->stash('pubmed_id') );
     };
     $self->render_exception(
-        'reference with pubmed ' . $self->stash('pubmed_id') 
-        . 'not found' )
+        'reference with pubmed ' . $self->stash('pubmed_id') . 'not found' )
         if !$ref;
     $self->redirect_to( '/curation/reference/' . $ref->pub_id ) if $ref;
 }
@@ -183,7 +189,7 @@ sub create_pubmed {
         my $linkout = $ls->next_UrlLink;
         $url = $linkout->get_url if $linkout;
     };
-    
+
     $self->app->log->error($@) if $@;
     $self->render(
         text => 'error retrieving pubmed '
@@ -266,17 +272,18 @@ sub link_gene {
     my $ref    = $self->get_reference;
     my $gene   = $self->get_gene;
 
-    eval { $gene->add_reference($ref); $gene->_update_reference_links; };
+    eval { $gene->add_reference($ref); $gene->update; };
     $self->app->log->error($@) if $@;
     $self->render(
-        text => 'error linking reference '
+        text => 'error linking reference #'
             . $self->stash('id')
             . " with gene "
             . $gene->name . " : $@",
         status => 500
     ) if $@;
 
-    $self->render( text => 'successfully linked '
+    $self->app->utils->clean_cache( $gene->primary_id );
+    $self->render( text => 'successfully linked reference #'
             . $self->stash('id')
             . " with gene "
             . $gene->name );
@@ -289,7 +296,7 @@ sub unlink_gene {
 
     eval {
         $gene->remove_reference($ref);
-        $gene->_update_reference_links;
+        $gene->update;
     };
     $self->app->log->error($@) if $@;
     $self->render(
@@ -299,7 +306,8 @@ sub unlink_gene {
             . $gene->name . " : $@",
         status => 500
     ) if $@;
-    
+
+    $self->app->utils->clean_cache( $gene->primary_id );
     $self->render( text => 'successfully unlinked '
             . $self->stash('id')
             . " with gene "
@@ -338,12 +346,19 @@ sub update_topics {
             delete $updated_topics{key};
         }
     }
+    $self->app->log->debug( 'adding: ' . join( ', ', keys %updated_topics ) );
+    $self->app->log->debug(
+        'removing: ' . join( ', ', keys %existng_topics ) );
 
     eval {
-        $gene->add_topic_by_reference( $ref,    [ keys %updated_topics ] );
-        $gene->remove_topic_by_reference( $ref, [ keys %existng_topics ] );
-        $gene->update;
+        $gene->add_topic_by_reference( $ref, [ keys %updated_topics ] )
+            if keys %updated_topics;
+        $gene->remove_topic_by_reference( $ref, [ keys %existng_topics ] )
+            if keys %existng_topics;
+        $gene->_update_reference_links;
     };
+    $topics =~ s{[\]\[]}{}g;
+
     $self->app->log->error($@) if $@;
     $self->render(
         text => 'error updating topics' 
@@ -353,10 +368,11 @@ sub update_topics {
         status => 500
     ) if $@;
 
-    $self->render( text => 'successfully updated topics ' 
-            . $topics
-            . ' for gene '
-            . $gene->name );
+    $self->app->utils->clean_cache( $gene->primary_id );
+    $self->render( text => 'successfully updated gene '
+            . $gene->name
+            . ' with topics '
+            . $topics );
 }
 
 ## not used any more, moved to bulk update from one-by-one

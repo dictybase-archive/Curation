@@ -4,9 +4,6 @@
         <head>
     	    <title>Exception</title>
     	    <style type="text/css">
-    	        body {
-    		        font: 0.9em Verdana, "Bitstream Vera Sans", sans-serif;
-    	        }
     	        .snippet {
                     font: 115% Monaco, "Courier New", monospace;
     	        }

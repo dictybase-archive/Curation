@@ -191,6 +191,8 @@
         var ids = this.getSelectedGenes();
         var topics = this.getSelectedTopics();
         
+        if (ids.length == 0){ return; }
+        
         this.waitingPanel();
         this.waiting = ids.length;
         

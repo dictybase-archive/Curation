@@ -43,7 +43,12 @@
                 success: function(){
                     location.replace('/curation/reference/pubmed/' + this.pubmed_id);
                 },
-                failure: function(){},
+                failure: function(obj){
+                    this.helpPanel.setHeader('Curation Error');
+                    this.helpPanel.setBody('Error retrieving PubMed entry, make sure provided id belongs to existing paper');
+                    this.helpPanel.show();
+                    this.hide();
+                },
                 scope: this
             });
 //            this.hide();
@@ -118,6 +123,7 @@
                 },
                 failure: function(){
                     this.createPubmedDialog.pubmed_id = id;
+                    this.createPubmedDialog.helpPanel = this.helpPanel;
                     this.createPubmedDialog.show();
                 },
                 scope: this
@@ -132,7 +138,6 @@
         this.helpPanel.setHeader('Curation Error');
         this.helpPanel.setBody(obj.responseText);
         this.helpPanel.show();
-
     };
     YAHOO.Dicty.Curation.prototype.validateInput = function(v){
         if (v == undefined || v.match(/\d/) == undefined){

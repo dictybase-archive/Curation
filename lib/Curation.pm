@@ -131,8 +131,9 @@ sub set_dbh {
         dsn      => $config->{dsn},
         user     => $config->{user},
         password => $config->{pwd},
-        attr     => $config->{attr}
+        attr     => { LongReadLen => 2**15, AutoCommit => 1 }
     );
     $self->schema( Modware::DataSource::Chado->handler );
 }
+
 1;

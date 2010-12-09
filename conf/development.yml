@@ -153,3 +153,5 @@ database:
         LongReadLen: 10000
         AutoCommit: 1
     login : curation.db
+cache:
+    cleanup_url: http://192.168.60.10/cache/gene/

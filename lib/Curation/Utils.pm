@@ -276,4 +276,12 @@ sub get_features {
     return @filtered_features;
 }
 
+sub clean_cache {
+    my ( $self, $id ) = @_;
+    my $config = $self->app->config;
+#    $self->app->log->debug(
+#        $self->app->client->delete( $config->{cache}->{cleanup_url} . $id )
+#            ->res->body );
+}
+
 1;
