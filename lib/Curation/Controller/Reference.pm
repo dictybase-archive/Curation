@@ -272,7 +272,7 @@ sub link_gene {
     my $ref    = $self->get_reference;
     my $gene   = $self->get_gene;
 
-    eval { $gene->add_reference($ref); $gene->update; };
+    eval { $gene->add_reference($ref); $gene->_update_reference_links; };
     $self->app->log->error($@) if $@;
     $self->render(
         text => 'error linking reference #'
@@ -296,11 +296,11 @@ sub unlink_gene {
 
     eval {
         $gene->remove_reference($ref);
-        $gene->update;
+        $gene->_update_reference_links;
     };
     $self->app->log->error($@) if $@;
     $self->render(
-        text => 'error unlinking reference '
+        text => 'error unlinking reference #'
             . $self->stash('id')
             . " with gene "
             . $gene->name . " : $@",
@@ -308,7 +308,7 @@ sub unlink_gene {
     ) if $@;
 
     $self->app->utils->clean_cache( $gene->primary_id );
-    $self->render( text => 'successfully unlinked '
+    $self->render( text => 'successfully unlinked reference #'
             . $self->stash('id')
             . " with gene "
             . $gene->name );
