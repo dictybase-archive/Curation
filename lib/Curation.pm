@@ -7,6 +7,8 @@ use dicty::DBH;
 use File::Spec::Functions;
 use Curation::Utils;
 use Modware::DataSource::Chado;
+use Schema::Curation::Result::Curator;
+use Schema::Curation::Result::CuratorFeaturePubprop;
 use base 'Mojolicious';
 use ModConfig;
 
@@ -66,15 +68,12 @@ sub startup {
         ->to( 'gene#blast_by_database', format => 'html' );
     $bridge->route('gene/:id/curation')->via('get')
         ->to( 'gene#curation', format => 'html' );
-    $bridge->route('gene/:id/update')
-        ->to( 'gene#update', format => 'html' );
-    $bridge->route('gene/:id/skip')
-        ->to( 'gene#skip', format => 'html' );
+    $bridge->route('gene/:id/update')->to( 'gene#update', format => 'html' );
+    $bridge->route('gene/:id/skip')->to( 'gene#skip', format => 'html' );
 
     $bridge->route('reference/:id/')->via('get')
         ->to( 'reference#show', format => 'html' );
-    $bridge->route('reference/:id/')->via('delete')
-        ->to('reference#delete');
+    $bridge->route('reference/:id/')->via('delete')->to('reference#delete');
 
     $bridge->route('reference/pubmed/:pubmed_id/')->via('get')
         ->to( 'reference#get_pubmed', format => 'html' );
@@ -131,9 +130,21 @@ sub set_dbh {
         dsn      => $config->{dsn},
         user     => $config->{user},
         password => $config->{pwd},
-        attr     => { LongReadLen => 2**15, AutoCommit => 1 }
+        attr     => $config->{attr}
     );
-    $self->schema( Modware::DataSource::Chado->handler );
+    my $schema = Modware::DataSource::Chado->handler;
+    $schema->register_class('Curator', 'Schema::Curation::Result::Curator');
+    $schema->register_class('CuratorFeaturePubprop','Schema::Curation::Result::CuratorFeaturePubprop');
+
+    my $name = 'Sequence::FeaturePubprop';
+    my $class = $schema->class($name);
+    $class->has_many(
+        'curator_feature_pubprops',
+        'Schema::Curation::Result::CuratorFeaturePubprop',
+        { 'foreign.feature_pubprop_id' => 'self.feature_pubprop_id' }
+    );
+
+    $self->schema($schema);
 }
 
 1;

@@ -341,9 +341,9 @@ sub update_topics {
         if $topics ne '[]';
 
     foreach my $topic ( keys %updated_topics ) {
-        if ( exists $existng_topics{key} ) {
-            delete $existng_topics{key};
-            delete $updated_topics{key};
+        if ( exists $existng_topics{$topic} ) {
+            delete $existng_topics{$topic};
+            delete $updated_topics{$topic};
         }
     }
     $self->app->log->debug( 'adding: ' . join( ', ', keys %updated_topics ) );
@@ -351,11 +351,10 @@ sub update_topics {
         'removing: ' . join( ', ', keys %existng_topics ) );
 
     eval {
-        $gene->add_topic_by_reference( $ref, [ keys %updated_topics ] )
+        $self->add_topic_by_reference( $ref, [ keys %updated_topics ] )
             if keys %updated_topics;
-        $gene->remove_topic_by_reference( $ref, [ keys %existng_topics ] )
+        $self->remove_topic_by_reference( $ref, [ keys %existng_topics ] )
             if keys %existng_topics;
-        $gene->_update_reference_links;
     };
     $topics =~ s{[\]\[]}{}g;
 
@@ -373,6 +372,108 @@ sub update_topics {
             . $gene->name
             . ' with topics '
             . $topics );
+}
+
+sub remove_topic_by_reference {
+    my ( $self, $ref, $topics ) = @_;
+    my $gene   = $self->get_gene;
+    my $schema = $self->app->schema;
+    my $rs     = $schema->resultset('Sequence::FeaturePub');
+
+    # -- delete topics tied to reference
+    for my $name (@$topics) {
+        my $sub = sub {
+            $rs->search(
+                {   feature_id => $gene->feature_id,
+                    pub_id     => $ref->pub_id
+                }
+                )->search_related(
+                'feature_pubprops',
+                {   value       => { 'like', 1 },
+                    'type.name' => $name,
+                    'cv.name'   => 'dictyBase_literature_topic'
+                },
+                { join => { 'type' => 'cv' } }
+                )->delete_all;
+        };
+        $schema->txn_do($sub);
+    }
+}
+
+sub add_topic_by_reference {
+    my ( $self, $ref, $topics ) = @_;
+    my $gene   = $self->get_gene;
+    my $schema = $self->app->schema;
+
+    my $fpub =
+        $schema->resultset('Sequence::FeaturePub')
+        ->search(
+        { pub_id => $ref->pub_id, feature_id => $gene->feature_id } )->first;
+    die 'reference not found, cannot add topics' if !$fpub;
+
+    for my $name (@$topics) {
+        my $cvterm_id = $self->find_or_create_cvterm_id(
+            cv     => 'dictyBase_literature_topic',
+            cvterm => $name,
+            db     => 'dictyBase'
+        );
+        $schema->txn_do(
+            sub {
+                my $featurepubprop = $schema->resultset('Sequence::FeaturePubprop')->create(
+                    {   feature_pub_id           => $fpub->feature_pub_id,
+                        type_id                  => $cvterm_id,
+                        value                    => 1,
+#                        curator_feature_pubprops => {
+#                            curator => { name => $self->session('username') }
+#                        }
+                    }
+                );
+                $schema->resultset(
+                    'Schema::Curation::Result::CuratorFeaturePubprop')
+                    ->create(
+                    {   curator => { name => $self->session('username') },
+                        feature_pubprop_id =>
+                            $featurepubprop->feature_pubprop_id
+                    }
+                );
+            }
+        );
+    }
+}
+
+sub find_or_create_cvterm_id {
+    my ( $self, %arg ) = @_;
+
+    my $cv     = $arg{cv};
+    my $db     = $arg{db};
+    my $cvterm = $arg{cvterm};
+
+    if ( exists $self->{bighash}->{$cvterm} ) {
+        my $row = $self->{bighash}->{$cvterm};
+        return $row->cvterm_id if $row->cv->name eq $cv;
+    }
+
+    my $bcs = Modware::DataSource::Chado->handler;
+    my $rs
+        = $bcs->resultset('Cv::Cvterm')
+        ->search( { 'me.name' => $cvterm, 'cv.name' => $cv },
+        { join => 'cv' } );
+
+    if ( $rs->count > 0 ) {
+        $self->{bighash}->{$cvterm} = $rs->first;
+        return $rs->first->cvterm_id;
+    }
+
+    #otherwise create one using the default cv namespace
+    my $nrow = $bcs->resultset('Cv::Cvterm')->create_with(
+        {   name   => $cvterm,
+            cv     => $cv,
+            db     => $db,
+            dbxref => $cv . '-' . $db . '-' . $cvterm
+        }
+    );
+    $self->{bighash}->{$cvterm} = $nrow;
+    $nrow->cvterm_id;
 }
 
 ## not used any more, moved to bulk update from one-by-one
