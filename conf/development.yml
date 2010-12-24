@@ -3,6 +3,8 @@ organism:
         prefix : DDB
         site_name : dictyBase
 
+signup : 1
+
 gene:
     linkout : /gene/
     gbrowse :

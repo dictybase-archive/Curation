@@ -3,25 +3,23 @@
     <h1>
         Login
     </h1>
-    <form id="login-form" method="post" action="/curation/usersession" name="login-form">
+    <% if (flash 'message') { %>
+        <div id="flash"><%= flash 'message' %></div>
+    <% } %>
+    <%= form_for create_session => (method => 'post') => begin %>
         <table>
             <tr>
-                <td>
-                    <label for="username">Username</label>
-                </td>
-                <td>
-                    <input id="username" name="username">
-                </td>
+                <td><label for="username">Username</label></td>
+                <td><%= text_field 'username' %></td>
             </tr>
             <tr>
-                <td>
-                    <label for="password">Password</label>
-                </td>
-                <td>
-                    <input id="password" type="password" name="password">
-                </td>
+                <td><label for="password">Password</label></td>
+                <td><%= password_field 'password' %></td>
             </tr>
         </table><br>
-        <input type="submit" value="Login">
-    </form>
+        <%= submit_button 'Login' %>
+        <% if (stash 'signup') { %>
+            <%= link_to "Sign up" => 'sign' %>
+        <% } %>
+    <% end %>
 </div>

@@ -8,7 +8,6 @@ use warnings;
 
 use base 'DBIx::Class::Core';
 
-
 =head1 NAME
 
 Schema::Curation::Result::Curator
@@ -35,15 +34,18 @@ __PACKAGE__->table("curator");
 =cut
 
 __PACKAGE__->add_columns(
-  "curator_id",
-  {
-    data_type => "numeric",
-    is_nullable => 0,
-    original => { data_type => "number" },
-    size => [11, 0],
-  },
-  "name",
-  { data_type => "varchar2", is_nullable => 1, size => 255 },
+    "curator_id",
+    {   data_type   => "numeric",
+        is_nullable => 0,
+        original    => { data_type => "number" },
+        size        => [ 11, 0 ],
+    },
+    "name",
+    { data_type => "varchar2", is_nullable => 1, size => 255 },
+    "initials",
+    { data_type => "varchar2", is_nullable => 1, size => 255 },
+    "password",
+    { data_type => "varchar2", is_nullable => 1, size => 32 },
 );
 __PACKAGE__->set_primary_key("curator_id");
 
@@ -58,16 +60,14 @@ Related object: L<Schema::Curation::Result::CuratorFeaturePubprop>
 =cut
 
 __PACKAGE__->has_many(
-  "curator_feature_pubprops",
-  "Schema::Curation::Result::CuratorFeaturePubprop",
-  { "foreign.curator_id" => "self.curator_id" },
-  { cascade_copy => 0, cascade_delete => 0 },
+    "curator_feature_pubprops",
+    "Schema::Curation::Result::CuratorFeaturePubprop",
+    { "foreign.curator_id" => "self.curator_id" },
+    { cascade_copy         => 0, cascade_delete => 0 },
 );
-
 
 # Created by DBIx::Class::Schema::Loader v0.07002 @ 2010-12-20 21:07:54
 # DO NOT MODIFY THIS OR ANYTHING ABOVE! md5sum:eyUBhv6qzmKisYFzful8Aw
-
 
 # You can replace this text with custom content, and it will be preserved on regeneration
 1;

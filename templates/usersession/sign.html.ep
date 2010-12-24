@@ -1,0 +1,28 @@
+% layout 'default';
+<div id="container-blank">
+    <h1>
+        Sign Up
+    </h1>
+    <%= form_for create_user => (method => 'post') => begin %>
+        <table>
+            <tr>
+                <td><label for="username ">Username</label></td>
+                <td><%= text_field 'username' %></td>
+            </tr>
+            <tr>
+                <td><label for="initials">Initials</label></td>
+                <td><%= text_field 'initials' %></td>
+            </tr>
+            <tr>
+                <td><label for="password">Password</label></td>
+                <td><%= password_field 'password' %></td>
+            </tr>
+            <tr>
+                <td><label for="password">Retype password</label></td>
+                <td><%= password_field 'password_confirm' %></td>
+            </tr>
+
+        </table><br>
+        <%= submit_button 'Sign up' %>
+    <% end %>
+</div>

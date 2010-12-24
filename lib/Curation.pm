@@ -41,17 +41,23 @@ sub startup {
     my $base = $router->namespace;
     $router = $router->namespace( $base . '::Controller' );
 
-    $router->route('curation/login')
+    $router->route('curation/login')->name('login')
         ->to( 'usersession#login', format => 'html' );
-    $router->route('curation/logout')
+    $router->route('curation/logout')->name('logout')
         ->to( 'usersession#logout', format => 'html' );
+    $router->route('curation/sign')->name('sign')
+        ->to( 'usersession#sign', format => 'html' );
 
-    $router->route('curation/usersession')->via('post')
-        ->to('usersession#create');
+    $router->route('curation/usersession')->name('create_session')
+        ->via('post')->to('usersession#create');
+    $router->route('curation/user/create')->name('create_user')
+        ->via('post')->to('usersession#create_user');
 
     my $bridge = $router->bridge('curation')->to('usersession#validate');
 
-    $bridge->route('')->to( 'curation#index', format => 'html' );
+    $bridge->route('')->name('home')
+        ->to( 'curation#index', format => 'html' );
+        
     $bridge->route('genes')->to( 'gene#index', format => 'html' );
     $bridge->route('gene/:id')->to( 'gene#show', format => 'html' );
     $bridge->route('gene/:id/fasta')->via('get')
@@ -133,16 +139,20 @@ sub set_dbh {
         attr     => $config->{attr}
     );
     my $schema = Modware::DataSource::Chado->handler;
-    $schema->register_class('Curator', 'Schema::Curation::Result::Curator');
-    $schema->register_class('CuratorFeaturePubprop','Schema::Curation::Result::CuratorFeaturePubprop');
+    $schema->register_class( 'Curator', 'Schema::Curation::Result::Curator' );
+    $schema->register_class( 'CuratorFeaturePubprop',
+        'Schema::Curation::Result::CuratorFeaturePubprop' );
 
-    my $name = 'Sequence::FeaturePubprop';
+    my $name  = 'Sequence::FeaturePubprop';
     my $class = $schema->class($name);
     $class->has_many(
         'curator_feature_pubprops',
         'Schema::Curation::Result::CuratorFeaturePubprop',
         { 'foreign.feature_pubprop_id' => 'self.feature_pubprop_id' }
     );
+
+    #    $schema->unregister_source($name);
+    #    $schema->register_class( $name, $class );
 
     $self->schema($schema);
 }

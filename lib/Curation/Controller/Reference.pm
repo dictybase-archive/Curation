@@ -20,6 +20,7 @@ sub show {
 
     my $topics_namespace = 'dictyBase_literature_topic';
 
+    ## genes with curated literature subquery
     my $sub_rs = $genes_rs->search(
         { 'cv.name' => $topics_namespace },
         {   join => [
@@ -30,12 +31,14 @@ sub show {
             ],
         }
     );
+    ## not yet curated genes
     my $not_curated_rs = $genes_rs->search(
         {   feature_id =>
                 { 'NOT IN' => $sub_rs->get_column('feature_id')->as_query },
         },
         { order_by => { -asc => 'me.name' } }
     );
+    ## curated gene
     my $curated_rs = $genes_rs->search(
         {   feature_id =>
                 { 'IN' => $sub_rs->get_column('feature_id')->as_query },
