@@ -44,7 +44,7 @@ gene:
             - type   : pseudogene
               style  : BGCOLOR lightgrey
               subfeature : pseudogenic_exon
-
+    
     blink :
         url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=
     
@@ -154,6 +154,9 @@ database:
     attr: 
         LongReadLen: 10000
         AutoCommit: 1
-    login : curation.db
+
 cache:
     cleanup_url: http://192.168.60.10/cache/gene/
+
+stats:
+    db: stats.db

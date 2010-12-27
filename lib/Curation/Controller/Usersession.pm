@@ -13,6 +13,7 @@ use base 'Mojolicious::Controller';
 sub login {
     my ($self) = @_;
     my $config = $self->app->config;
+    
     $self->redirect_to('home') if $self->session('initials'); 
     $self->stash( signup => $config->{signup} ) if $config->{signup};
 }
@@ -47,33 +48,30 @@ sub create {
     my $password = $self->req->param('password');
     my $username = $self->req->param('username');
 
-    if ( $password !~ m{\w} || $username !~ m{\w} ){
+    if (!$password || !$username){
         $self->flash( message => 'Both password and username must be provided');  
         $self->redirect_to('login');        
     };
-    use Data::Dumper;
-    $password =~ m{(\w)};
-    $self->app->log->debug(Dumper $1);
-    
-    my $dbfile = catfile( $self->app->home->rel_dir('db'),
-        $self->app->config->{database}->{login} );
-    my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbfile", '', '' );
 
-    my $sql =
-        'SELECT initials FROM users WHERE name like ? and password like ?;';
-    my $sth = $dbh->prepare($sql);
-    $sth->execute( $username, $password );
-
-    my $initials = $sth->fetchrow();
-    if (!$initials){
-        $self->flash( message => 'Provided username and password cobination not found');  
+    my $rs   = $self->app->schema->resultset('Curator');
+    my $user = $rs->search(
+        {   name     => $username,
+            password => md5_hex($password)
+        }
+    )->first;
+    if (!$user){
+        $self->flash( message => 'Provided username and password combination not found');  
         $self->redirect_to('login');
-    };
-
-    $self->app->log->info( 'login: ' . $initials );
-    
-    $self->session( initials => $initials, username => $username );
-    $self->redirect_to('home');
+    }
+    elsif (!$user->initials){
+        $self->flash( message => 'User does ot have initials set, are you human?');  
+        $self->redirect_to('login');
+    }
+    else {
+        $self->app->log->info( 'login: ' . $user->name );
+        $self->session( initials => $user->initials, username => $user->name );
+        $self->redirect_to('home');   
+    }
 }
 
 sub create_user {

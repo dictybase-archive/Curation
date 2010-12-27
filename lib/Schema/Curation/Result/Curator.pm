@@ -41,11 +41,11 @@ __PACKAGE__->add_columns(
         size        => [ 11, 0 ],
     },
     "name",
-    { data_type => "varchar2", is_nullable => 1, size => 255 },
+    { data_type => "varchar2", is_nullable => 0, size => 255 },
     "initials",
     { data_type => "varchar2", is_nullable => 1, size => 255 },
     "password",
-    { data_type => "varchar2", is_nullable => 1, size => 32 },
+    { data_type => "varchar2", is_nullable => 0, size => 32 },
 );
 __PACKAGE__->set_primary_key("curator_id");
 
