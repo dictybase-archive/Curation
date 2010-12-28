@@ -625,11 +625,12 @@ sub update {
     my $note_date = strftime "%d-%b-%Y", localtime;
     eval {
         $paragraph = dicty::DB::Paragraph->create(
-            {         paragraph_text => '<summary><curation_status>'
+            {   paragraph_text => '<summary><curation_status>'
                     . 'A curated model has been added, '
                     . uc($note_date) . ' '
                     . $curator_initials
                     . '</curation_status></summary>',
+                created_by => $self->session('username')
             }
         );
         my $fprop = Chado::Featureprop->get_single_row(

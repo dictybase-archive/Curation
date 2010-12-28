@@ -5,6 +5,7 @@ use DBI;
 use IO::File;
 use Getopt::Long;
 use File::Spec::Functions;
+use DateTime::Format::Strptime;
 
 my ( $help, $dbfile, $source);
 
@@ -22,6 +23,8 @@ $dbh->{AutoCommit} = 1;
 die 'no source folder provided' if !$source;
 my @tables = ( 'stats', 'curation_stats' );
 
+my $parser = DateTime::Format::Strptime->new(pattern => '%b-%d-%Y');
+
 foreach my $table (@tables) {
     my $filename =  catfile( $source, $table );
     die 'source folder does not have source file: ' . $table
@@ -37,10 +40,13 @@ foreach my $table (@tables) {
         insert into $table values($placeholders)
     };
     my $sth = $dbh->prepare($insert_sql);
-
-    while (my $line = $fh->getline){
+    while ( my $line = $fh->getline ) {
         chomp $line;
-        my @values = map { $_ eq 'n/a' ? undef : $_ }split("\t", $line, $val_count);
-        $sth->execute(@values);
+        my ( $id, $date, @values ) =
+            map { $_ eq 'n/a' ? undef : $_ } split( "\t", $line, $val_count );
+
+        my $parsed_date =
+            $parser->parse_datetime(uc $date)->strftime('%Y-%m-%d');
+        $sth->execute( $id, $parsed_date, @values );
     }
 };

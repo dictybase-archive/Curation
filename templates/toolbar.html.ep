@@ -54,8 +54,11 @@
                                                                 <a class="yuimenuitemlabel" href="/tutorial/">Learn About Dicty</a>
                                                             </li>
                                                             <li class="yuimenuitem">
-                                                                <a class="yuimenuitemlabel" href="/Dicty_Info/dictyostelium_genomics.html">Dictyostelium Genomics</a>
+                                                                <a class="yuimenuitemlabel" href="/Dicty_Info/dictyostelium_genomics.html">Dictyostelium Genome Resources</a>
                                                             </li>
+                                                            <li class="yuimenuitem">
+                                                                <a class="yuimenuitemlabel" href="/Dicty_Info/genome_statistics.html">D. discoideum Genome Statistics</a>
+                                                            </li>                                                            
                                                             <li class="yuimenuitem">
                                                                 <a class="yuimenuitemlabel" href="/Multimedia/index.html">Pictures/Videos</a>
                                                             </li>

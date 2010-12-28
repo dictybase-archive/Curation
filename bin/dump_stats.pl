@@ -41,12 +41,12 @@ my $tables = [
             {   gene_prodicts =>
                     'Genes with gene product (manual + electronic)'
             },
-            { manual_gene_products  => 'Genes with manual gene product' },
-            { unknown_gene_product  => 'Genes with "unknown" gene product' },
-            { go_annotations        => 'Total GO annotations' },
-            { non_iea_go            => 'Non IEA GO' },
-            { genes_with_go         => 'Genes with GO' },
-            { genes_with_exp        => 'Genes wth EXP' },
+            { manual_gene_products => 'Genes with manual gene product' },
+            { unknown_gene_product => 'Genes with "unknown" gene product' },
+            { go_annotations       => 'Total GO annotations' },
+            { non_iea_go           => 'Non IEA GO' },
+            { genes_with_go        => 'Genes with GO' },
+            { genes_with_exp       => 'Genes wth EXP' },
             {   fully_go_annotated_genes =>
                     'Fully GO annotated genes, manually, all three aspects'
             },
@@ -83,6 +83,7 @@ my $tables = [
             },
             { basic_annotations => 'Basic annotations' },
         ],
+        group_by   => 'curator',
         worksheet  => $xls->add_worksheet('by curator'),
         difference => $xls->add_worksheet('difference by curator')
     }
@@ -93,7 +94,7 @@ foreach my $table (@$tables) {
 
     $table->{worksheet}->write( "A1", \@header );
     $table->{difference}->write( "A1", \@header );
-    
+
     my $row_num = 2;
 
     my @table_columns = map { keys %$_ } @{ $table->{columns} };
@@ -102,30 +103,39 @@ foreach my $table (@$tables) {
 
     my $sth = $dbh->prepare($query);
     $sth->execute();
-    
-    my $prev_row;
-    while ( my $row = $sth->fetchrow_arrayref ) {
+
+    my $stored_row;
+    my $stored_row_hash;
+
+    while ( my $row = $sth->fetchrow_hashref ) {
         my $difference = [];
-        if ($prev_row) {
-            for ( my $i = 0; $i < scalar @$row; $i++ ) {
-                if ( @$row[$i] !~ m{^\d} ) {
-                    push @$difference, @$row[$i];
+        my @line = map { $row->{$_} } @table_columns;
+
+        if ( $stored_row || $stored_row_hash ) {
+            my $prev_row = $stored_row
+                || $stored_row_hash->{ $row->{ $table->{group_by} } };
+
+            for ( my $i = 0; $i < scalar @line; $i++ ) {
+                if ( @line[$i] !~ m{^\d+$} ) {
+                    push @$difference, @line[$i];
                     next;
                 }
-                my $diff = @$row[$i] - @$prev_row[$i];
+                my $diff = @line[$i] - @$prev_row[$i];
                 push @$difference, $diff;
             }
-            use Data::Dumper;
-            print Dumper $difference;
         }
-        my @total = ( @$row, @$difference );
-        $table->{worksheet}->write( "A$row_num", $row );
+
+        $table->{worksheet}->write( "A$row_num", \@line );
         $table->{difference}->write( "A$row_num", $difference );
+
         $row_num++;
-        @$prev_row = @$row;
+        if ( $table->{group_by} ) {
+            $stored_row_hash->{ $row->{ $table->{group_by} } } = \@line;
+        }
+        else {
+            @$stored_row = @line;
+        }
     }
-
 }
- $xls->close();
-
+$xls->close();
 
