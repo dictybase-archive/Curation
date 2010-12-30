@@ -508,11 +508,13 @@ foreach my $table (@$tables) {
     }
 
     foreach my $key ( sort keys %$insert_hash ) {
-        next if $key !~ m {^BOBD|PFEY|PASC|KERRY};
-        
         my $rowset  = $insert_hash->{$key};
         my @columns = keys %$rowset;
         my @values  = map { $rowset->{$_} } @columns;
+
+        next
+            if $rowset->{'curator'}
+                && $rowset->{'curator'} !~ m{BOBD|PFEY|PASC|KERRY};
 
         my $placeholders = join ',', map {'?'} @values;
         my $insert_sql =
