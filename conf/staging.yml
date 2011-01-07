@@ -101,6 +101,14 @@ gene:
               matrix : BLOSUM62
               program : blastp  
               wordsize : 3                  
+            - database : dicty_primary_protein
+              name: D.discoideum
+              evalue : 0.1
+              filter : T
+              gapped : T
+              limit  : 5
+              matrix : BLOSUM62
+              program : blastp
     
     curation:
         features:
@@ -152,7 +160,7 @@ gene:
     
 
 reference: 
-    linkout : /db/cgi-bin/dictyBase/reference/reference.pl?refNo=
+    linkout : /publication/
 
 database:
     dsn: dbi:Oracle:host=gdev.bioinformatics.northwestern.edu;sid=dictytst
