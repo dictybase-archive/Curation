@@ -79,7 +79,7 @@ my $tables = [
             }
             },
             {   summary => qq{
-                SELECT count(*) FROM cgm_chado.v_gene_features g
+                SELECT count(*) AS c FROM cgm_chado.v_gene_features g
                 WHERE EXISTS
                   (SELECT 'a' FROM cgm_chado.featureprop fp
                   INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
@@ -511,7 +511,7 @@ foreach my $table (@$tables) {
         my $rowset  = $insert_hash->{$key};
         my @columns = keys %$rowset;
         my @values  = map { $rowset->{$_} } @columns;
-
+        
         next
             if $rowset->{'curator'}
                 && $rowset->{'curator'} !~ m{BOBD|PFEY|PASC|KERRY};
