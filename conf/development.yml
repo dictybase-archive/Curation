@@ -162,9 +162,456 @@ database:
     attr: 
         LongReadLen: 10000
         AutoCommit: 1
+    stats: stats.db
 
 cache:
     cleanup_url: http://192.168.60.10/cache/gene/
 
 stats:
-    db: stats.db
+    tables:
+        - name: stats
+          columns:
+                - column: timecreated
+                - column: curated
+                  name: 'Curated gene models'
+                  sql: |
+                    SELECT COUNT(*) AS c FROM cgm_chado.v_verified_gene_features v
+                - column: curated_incomplete_support
+                  name: 'Curated gene models, incomplete support'
+                  sql: |
+                    SELECT COUNT(*) AS c FROM cgm_chado.v_verified_gene_features v
+                    INNER JOIN cgm_chado.featureprop p ON p.feature_id=v.feature_id
+                    WHERE p.value LIKE 'genomic context' OR p.value LIKE 'Incomplete support'
+                - column: pseudogenes
+                  name: 'Pseudogenes'
+                  sql: |
+                    SELECT COUNT(*) AS c FROM cgm_chado.v_notdeleted_feature f
+                    INNER JOIN cgm_chado.cvterm ct ON ct.cvterm_id = f.type_id
+                    WHERE ct.name   = 'pseudogene'
+                - column: alternate_transcripts
+                  name: 'Alternate transcripts'
+                  sql: |
+                    SELECT COUNT(*) AS c FROM
+                    (SELECT g.feature_id FROM cgm_chado.v_gene_features g
+                    INNER JOIN cgm_chado.feature_relationship fr ON g.feature_id = fr.object_id
+                    INNER JOIN v_verified_gene_features m ON m.feature_id = fr.subject_id
+                    GROUP BY g.feature_id HAVING COUNT(m.feature_id) > 1)              
+                - column: comprehensively_annotated
+                  name: 'Genes comprehencively annotated'
+                  sql: |
+                    SELECT COUNT (fp.feature_id) AS c FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id     = ct.cvterm_id
+                    WHERE ct.name = 'paragraph_no' AND p.paragraph_text LIKE '%comprehensively annotated%'
+                - column: basic_annotations
+                  name: 'Basic annotations'
+                  sql: |
+                    SELECT COUNT (fp.feature_id) AS c FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id     = ct.cvterm_id
+                    WHERE ct.name = 'paragraph_no' AND p.paragraph_text LIKE '%Basic annotations%'
+                - column: genes_descriptions
+                  name: 'Genes with descriptions'
+                  sql: |
+                    SELECT COUNT(*) AS c FROM cgm_chado.featureprop p
+                    INNER JOIN cgm_chado.v_gene_features l ON l.feature_id=p.feature_id
+                    INNER JOIN cgm_chado.cvterm ct ON ct.cvterm_id = p.type_id
+                    WHERE ct.name   = 'description'                
+                - column: gene_name_descriptions
+                  name : 'Genes with name descriptions'
+                  sql: |
+                    SELECT COUNT(*) AS c FROM cgm_chado.featureprop p
+                    INNER JOIN cgm_chado.v_gene_features l ON l.feature_id=p.feature_id 
+                    INNER JOIN cvterm ON cvterm.cvterm_id = p.type_id
+                    WHERE cvterm.name = 'name description'                
+                - column: summary
+                  name: 'Genes with summary'
+                  sql: |
+                    SELECT count(*) AS c FROM cgm_chado.v_gene_features g
+                    WHERE EXISTS
+                    (SELECT 'a' FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    INNER JOIN cgm_ddb.paragraph p  ON TO_NCHAR(fp.value)= p.paragraph_no
+                    WHERE fp.feature_id  = g.feature_id AND ct.name          = 'paragraph_no'
+                    AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)'))
+                - column: gene_prodicts 
+                  name: 'Genes with gene product (manual + electronic)'
+                  sql: |
+                    SELECT COUNT (DISTINCT feature_id) AS c FROM cgm_chado.v_gene_features
+                    WHERE feature_id IN
+                    (SELECT feature_id FROM cgm_chado.v_gene_features l
+                    INNER JOIN cgm_ddb.locus_gp gp       ON gp.locus_no=l.feature_id
+                    INNER JOIN cgm_ddb.gene_product g ON g.gene_product_no=gp.gene_product_no
+                    INNER JOIN cgm_chado.organism o     ON o.organism_id = l.organism_id 
+                    WHERE o.common_name LIKE 'dicty')          
+                - column: manual_gene_products
+                  name: 'Genes with manual gene product'
+                  sql: |
+                    SELECT COUNT (DISTINCT feature_id) AS c FROM cgm_chado.v_gene_features
+                    WHERE feature_id IN
+                    (SELECT feature_id FROM cgm_chado.v_gene_features l
+                    INNER JOIN cgm_ddb.locus_gp gp ON gp.locus_no=l.feature_id
+                    INNER JOIN cgm_ddb.gene_product g ON g.gene_product_no=gp.gene_product_no
+                    INNER JOIN cgm_chado.organism o ON o.organism_id = l.organism_id
+                    WHERE o.common_name LIKE 'dicty' AND ( NOT g.is_automated=1
+                    OR g.is_automated IS NULL))
+                - column: unknown_gene_product
+                  name: 'Genes with "unknown" gene product'
+                  sql: |
+                    SELECT COUNT (DISTINCT feature_id) AS c FROM cgm_chado.v_gene_features
+                    WHERE feature_id IN
+                    (SELECT feature_id FROM cgm_chado.v_gene_features l
+                    INNER JOIN cgm_ddb.locus_gp gp ON gp.locus_no=l.feature_id
+                    INNER JOIN cgm_ddb.gene_product g ON g.gene_product_no=gp.gene_product_no
+                    INNER JOIN cgm_chado.organism o ON o.organism_id = l.organism_id
+                    WHERE o.common_name LIKE 'dicty' AND g.gene_product='unknown')
+                - column: go_annotations
+                  name: 'Total GO annotations'
+                  sql: |
+                    SELECT COUNT(*) AS c FROM cgm_chado.feature_cvterm fc
+                    INNER JOIN cgm_chado.cvterm ct ON fc.cvterm_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv ON ct.cv_id = cv.cv_id
+                    INNER JOIN cgm_chado.v_gene_features g ON g.feature_id = fc.feature_id
+                    WHERE cv.name  IN ('molecular_function', 'biological_process', 'cellular_component')
+                - column: non_iea_go
+                  name: 'Non IEA GO'
+                  sql: |
+                    SELECT COUNT(*) AS c
+                    FROM cgm_chado.feature_cvterm fc
+                    INNER JOIN cgm_chado.cvterm ct ON fc.cvterm_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv ON ct.cv_id = cv.cv_id
+                    INNER JOIN cgm_chado.feature_cvtermprop fcp ON fcp.feature_cvterm_id = fc.feature_cvterm_id
+                    INNER JOIN cgm_chado.cvterm fcpc ON fcp.type_id = fcpc.cvterm_id
+                    INNER JOIN cgm_chado.cv fcv ON fcpc.cv_id = fcv.cv_id
+                    INNER JOIN cgm_chado.v_gene_features g ON g.feature_id = fc.feature_id
+                    INNER JOIN cgm_chado.organism o ON o.organism_id = g.organism_id
+                    WHERE o.common_name LIKE 'dicty'
+                    AND cv.name  IN ('molecular_function', 'biological_process', 'cellular_component')
+                    AND fcv.name LIKE 'evidence_code%'
+                    AND fcpc.name NOT LIKE 'inferred from electronic annotation'
+                - column: genes_with_go
+                  name: 'Genes with GO'
+                  sql: |
+                    SELECT COUNT( DISTINCT fc.feature_id ) AS c FROM cgm_chado.feature_cvterm fc
+                    INNER JOIN cgm_chado.cvterm ct ON fc.cvterm_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv ON ct.cv_id = cv.cv_id
+                    INNER JOIN cgm_chado.v_gene_features g ON g.feature_id = fc.feature_id
+                    WHERE cv.name  IN ('molecular_function', 'biological_process', 'cellular_component')
+                - column: genes_with_exp
+                  name: 'Genes wth EXP'
+                  sql: |
+                    SELECT COUNT( DISTINCT fc.feature_id ) AS c
+                    FROM cgm_chado.feature_cvterm fc
+                    INNER JOIN cgm_chado.cvterm ct         ON fc.cvterm_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv                ON ct.cv_id = cv.cv_id
+                    INNER JOIN cgm_chado.v_gene_features g ON g.feature_id = fc.feature_id
+                    INNER JOIN cgm_chado.organism o        ON o.organism_id = g.organism_id
+                    WHERE o.common_name LIKE 'dicty'
+                    AND cv.name  IN ('molecular_function', 'biological_process', 'cellular_component')
+                    AND EXISTS
+                    (SELECT 'a'
+                    FROM cgm_chado.feature_cvtermprop fcp
+                    INNER JOIN cgm_chado.cvterm fcpc ON fcp.type_id = fcpc.cvterm_id
+                    INNER JOIN cgm_chado.cv fcv      ON fcpc.cv_id = fcv.cv_id
+                    WHERE fcp.feature_cvterm_id = fc.feature_cvterm_id
+                    AND fcv.name LIKE 'evidence_code%'
+                    AND fcpc.name IN ('inferred from mutant phenotype', 'inferred from genetic interaction', 'inferred from physical interaction', 'inferred from direct assay')
+                    )
+                - column: fully_go_annotated_genes
+                  name: 'Fully GO annotated genes, manually, all three aspects'
+                  sql: |
+                    SELECT COUNT( DISTINCT g.feature_id ) AS c
+                    FROM cgm_chado.v_gene_features g 
+                    INNER JOIN cgm_chado.organism o ON o.organism_id = g.organism_id
+                    WHERE o.common_name LIKE 'dicty'
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_chado.feature_cvterm fc
+                    INNER JOIN cgm_chado.cvterm ct ON fc.cvterm_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv ON ct.cv_id = cv.cv_id
+                    INNER JOIN cgm_chado.feature_cvtermprop fcp ON fc.feature_cvterm_id = fcp.feature_cvterm_id
+                    INNER JOIN cgm_chado.cvterm fcpc ON fcp.type_id = fcpc.cvterm_id
+                    INNER JOIN cgm_chado.cv fcv ON fcpc.cv_id       = fcv.cv_id
+                    WHERE fc.feature_id = g.feature_id
+                    AND cv.name         = 'molecular_function'
+                    AND fcv.name LIKE 'evidence_code%'
+                    AND fcpc.name NOT LIKE 'inferred from electronic annotation'
+                    )
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_chado.feature_cvterm fc
+                    INNER JOIN cgm_chado.cvterm ct ON fc.cvterm_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv ON ct.cv_id = cv.cv_id
+                    INNER JOIN cgm_chado.feature_cvtermprop fcp ON fc.feature_cvterm_id = fcp.feature_cvterm_id
+                    INNER JOIN cgm_chado.cvterm fcpc ON fcp.type_id = fcpc.cvterm_id
+                    INNER JOIN cgm_chado.cv fcv ON fcpc.cv_id       = fcv.cv_id
+                    WHERE fc.feature_id = g.feature_id
+                    AND cv.name         = 'biological_process'
+                    AND fcv.name LIKE 'evidence_code%'
+                    AND fcpc.name NOT LIKE 'inferred from electronic annotation'
+                    )
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_chado.feature_cvterm fc
+                    INNER JOIN cgm_chado.cvterm ct ON fc.cvterm_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv ON ct.cv_id = cv.cv_id
+                    INNER JOIN cgm_chado.feature_cvtermprop fcp ON fc.feature_cvterm_id = fcp.feature_cvterm_id
+                    INNER JOIN cgm_chado.cvterm fcpc ON fcp.type_id = fcpc.cvterm_id
+                    INNER JOIN cgm_chado.cv fcv ON fcpc.cv_id = fcv.cv_id
+                    WHERE fc.feature_id = g.feature_id
+                    AND cv.name         = 'cellular_component'
+                    AND fcv.name LIKE 'evidence_code%'
+                    AND fcpc.name NOT LIKE 'inferred from electronic annotation'
+                    )
+                - column: fully_go_annotated_genes_iea
+                  name: 'Fully GO annotated genes (incl. IEAs)'
+                  sql: |
+                    SELECT COUNT( DISTINCT g.feature_id ) AS c
+                    FROM cgm_chado.v_gene_features g
+                    INNER JOIN cgm_chado.organism o ON o.organism_id = g.organism_id
+                    WHERE o.common_name LIKE 'dicty'
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_chado.feature_cvterm fc
+                    INNER JOIN cgm_chado.cvterm ct ON fc.cvterm_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv ON ct.cv_id = cv.cv_id
+                    WHERE fc.feature_id = g.feature_id AND cv.name = 'molecular_function'
+                    )
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_chado.feature_cvterm fc
+                    INNER JOIN cgm_chado.cvterm ct ON fc.cvterm_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv ON ct.cv_id = cv.cv_id
+                    WHERE fc.feature_id = g.feature_id AND cv.name = 'biological_process'
+                    )
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_chado.feature_cvterm fc
+                    INNER JOIN cgm_chado.cvterm ct ON fc.cvterm_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv ON ct.cv_id = cv.cv_id
+                    WHERE fc.feature_id = g.feature_id AND cv.name = 'cellular_component'
+                    )
+                - column: strains
+                  name: 'Total strains'
+                  sql: |
+                    SELECT count(*) AS c FROM cgm_ddb.stock_center
+                - column: genes_wth_strains
+                  name: 'Genes with strain(s)'
+                  sql: |
+                    SELECT count (distinct feature_id) AS c FROM cgm_chado.feature_genotype
+                - column: strains_with_genes
+                  name: 'Strains with genes associated'
+                  sql: |
+                    SELECT count (distinct genotype_id) AS c FROM cgm_chado.feature_genotype
+                - column: phenotypes
+                  name: 'Total phenotypes'
+                  sql: |
+                    SELECT count(*) as c FROM cgm_chado.phenotype p
+                - column: genes_with_phenotypes
+                  name: 'Genes with phenotype(s)'
+                  sql: | 
+                    SELECT COUNT(DISTINCT f.name) AS c
+                    FROM cgm_chado.feature f
+                    INNER JOIN cgm_chado.feature_genotype fg ON f.feature_id = fg.feature_id
+                    INNER JOIN cgm_chado.phenstatement ph ON ph.genotype_id = fg.genotype_id
+                - column: papers_curated
+                  name: 'Curated papers'
+                  sql: |
+                    SELECT COUNT( DISTINCT p.pub_id ) as c
+                    FROM cgm_chado.pub p
+                    WHERE EXISTS
+                    (SELECT 'a'
+                    FROM cgm_chado.feature_pub fp
+                    INNER JOIN cgm_chado.feature_pubprop fpp ON fp.feature_pub_id = fpp.feature_pub_id
+                    INNER JOIN cgm_chado.cvterm ct ON fpp.type_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv ON ct.cv_id    = cv.cv_id
+                    WHERE p.pub_id = fp.pub_id
+                    AND cv.name    ='dictyBase_literature_topic'
+                    )
+                - column: papers_not_curated
+                  name: 'Not yet curated papers'
+              
+                - column: community_annotations
+                  name: 'Community annotations'
+                  sql: | 
+                    SELECT COUNT(*) AS c FROM cgm_chado.featureprop fp
+                    WHERE fp.value LIKE 'Has Wiki Page'
+        - name: curation_stats
+          columns:
+                - column: timecreated
+                  name: 'Date'
+                - column: curator
+                  name: 'Curator'
+                - column: curated
+                  name: 'Curated gene models' 
+                  sql: |
+                    SELECT COUNT(*) AS curated_models,  f.created_by AS curator
+                    FROM cgm_chado.v_verified_gene_features f
+                    GROUP BY f.created_by
+                - column: pseudogenes
+                  name: 'Pseudogenes'
+                  sql: |
+                    SELECT COUNT(*) AS c, f.created_by AS curator
+                    FROM cgm_chado.v_notdeleted_feature f
+                    INNER JOIN cgm_chado.cvterm ct ON ct.cvterm_id = f.type_id
+                    WHERE ct.name   = 'pseudogene'
+                    GROUP BY f.created_by
+                - column: go_annotations
+                  name: 'Total GO annotations'
+                - column: genes_with_go
+                  name: 'Genes with GO'
+                - column: phenotypes
+                  name: 'Total phenotypes'
+                  sql: |
+                    SELECT count(*) as c, p.created_by AS curator 
+                    FROM cgm_chado.phenotype p group by p.created_by
+                - column: genes_with_phenotypes
+                  name: 'Genes with phenotype(s)'
+                  sql: |
+                    SELECT COUNT(*) AS c, p.created_by AS curator
+                    FROM cgm_chado.feature f
+                    INNER JOIN cgm_chado.feature_genotype fg ON f.feature_id = fg.feature_id
+                    INNER JOIN cgm_chado.phenstatement ph ON ph.genotype_id = fg.genotype_id
+                    INNER JOIN cgm_chado.phenotype p ON p.phenotype_id=ph.phenotype_id
+                    GROUP BY p.created_by
+                - column: strains
+                  name: 'Total strains'
+                  sql: |
+                    SELECT COUNT(*) AS c, sc.created_by AS curator
+                    FROM cgm_ddb.stock_center sc
+                    GROUP BY sc.created_by
+                    ORDER BY sc.created_by
+                - column: genes_wth_strains
+                  name: 'Genes with strain(s)'
+                  sql: |
+                    SELECT COUNT (*) AS c, cr.name AS curator
+                    FROM cgm_chado.curator_feature_genotype cfg
+                    INNER JOIN cgm_chado.curator cr
+                    ON cfg.curator_id = cr.curator_id
+                    GROUP BY cr.name
+                - column: papers_curated
+                  name: 'Curated papers'
+                  sql: |
+                    SELECT COUNT(DISTINCT fp.pub_id) AS c, cr.name AS curator
+                    FROM cgm_chado.feature_pub fp
+                    INNER JOIN cgm_chado.feature_pubprop fpp ON fp.feature_pub_id = fpp.feature_pub_id
+                    INNER JOIN cgm_chado.curator_feature_pubprop cfp ON cfp.feature_pubprop_id = fpp.feature_pubprop_id
+                    INNER JOIN cgm_chado.curator cr ON cr.curator_id = cfp.curator_id
+                    INNER JOIN cgm_chado.cvterm ct ON fpp.type_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.cv ON ct.cv_id   = cv.cv_id
+                    WHERE cv.name ='dictyBase_literature_topic'
+                    GROUP BY cr.name
+                - column: summary
+                  name: 'Genes with summary'
+                  sql: |
+                    SELECT COUNT(*) AS c, 'CGM_DDB_PFEY' AS curator
+                    FROM cgm_ddb.paragraph p
+                    WHERE NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF')
+                    AND EXISTS
+                    (SELECT 'a'
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE TO_NCHAR(fp.value) = p.paragraph_no
+                    AND ct.name             = 'paragraph_no'
+                    )
+                    UNION
+                    SELECT COUNT(*) AS c, 'CGM_DDB_PASC' AS curator
+                    FROM cgm_ddb.paragraph p
+                    WHERE NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG')
+                    AND EXISTS
+                    (SELECT 'a'
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE TO_NCHAR(fp.value)= p.paragraph_no
+                    AND ct.name             = 'paragraph_no'
+                    )
+                    UNION
+                    SELECT COUNT(*) AS c, 'CGM_DDB_KERRY' AS curator
+                    FROM cgm_ddb.paragraph p
+                    WHERE NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS')
+                    AND EXISTS
+                    (SELECT 'a'
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE TO_NCHAR(fp.value)= p.paragraph_no
+                    AND ct.name             = 'paragraph_no'
+                    )
+                    UNION
+                    SELECT COUNT(*) AS c, 'CGM_DDB_BOBD' AS curator
+                    FROM cgm_ddb.paragraph p
+                    WHERE NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD')
+                    AND EXISTS
+                    (SELECT 'a'
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE TO_NCHAR(fp.value)= p.paragraph_no
+                    AND ct.name             = 'paragraph_no'
+                    )
+                - column: comprehensively_annotated
+                  name: 'Genes comprehencively annotated'
+                  sql: |
+                    SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_BOBD' AS curator
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name = 'paragraph_no'
+                    AND p.paragraph_text LIKE '%comprehensively annotated%'
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD')
+                    UNION
+                    SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PFEY' AS curator
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name = 'paragraph_no'
+                    AND p.paragraph_text LIKE '%comprehensively annotated%'
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF')
+                    UNION
+                    SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PASC' AS curator
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name = 'paragraph_no' 
+                    AND p.paragraph_text LIKE '%comprehensively annotated%'
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG')
+                    UNION
+                    SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_KERRY' AS curator
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name = 'paragraph_no'
+                    AND p.paragraph_text LIKE '%comprehensively annotated%'
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS')
+                - column: basic_annotations
+                  name: 'Basic annotations'
+                  sql: |
+                    SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_BOBD' AS curator
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name = 'paragraph_no'
+                    AND p.paragraph_text LIKE '%Basic annotations%'
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD')
+                    UNION
+                    SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PFEY' AS curator
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name = 'paragraph_no'
+                    AND p.paragraph_text LIKE '%Basic annotations%'
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF')
+                    UNION
+                    SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PASC' AS curator
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name = 'paragraph_no' 
+                    AND p.paragraph_text LIKE '%Basic annotations%'
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG')
+                    UNION
+                    SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_KERRY' AS curator
+                    FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name = 'paragraph_no'
+                    AND p.paragraph_text LIKE '%Basic annotations%'
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS')
+          group_by: curator
+
