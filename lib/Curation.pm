@@ -102,10 +102,10 @@ sub startup {
         ->to('statistics#update', format => 'text');    
     
     ## not used any more, moved to bulk update from one-by-one
-    $bridge->route('reference/:id/gene/:gene_id/topics/')->via('post')
-        ->to('reference#add_topic');
-    $bridge->route('reference/:id/gene/:gene_id/topics/:topic')->via('delete')
-        ->to('reference#delete_topic');
+#    $bridge->route('reference/:id/gene/:gene_id/topics/')->via('post')
+#        ->to('reference#add_topic');
+#    $bridge->route('reference/:id/gene/:gene_id/topics/:topic')->via('delete')
+#        ->to('reference#delete_topic');
 
     # config file setup
     $self->set_config;
