@@ -169,7 +169,8 @@ cache:
 
 stats:
     tables:
-        - name: stats
+        - table: stats
+          name: Weekly stats
           columns:
                 - column: timecreated
                 - column: curated
@@ -185,7 +186,7 @@ stats:
                     INNER JOIN cgm_chado.featureprop p ON p.feature_id=v.feature_id
                     INNER JOIN cgm_chado.organism o    ON o.organism_id = v.organism_id
                     WHERE o.common_name = 'dicty'
-                    AND p.value in ('genomic context', 'Incomplete support')
+                    AND (p.value LIKE 'genomic context' OR p.value LIKE 'Incomplete support')
                 - column: pseudogenes
                   name: 'Pseudogenes'
                   sql: |
@@ -231,7 +232,7 @@ stats:
                   sql: |
                     SELECT COUNT(*) AS c FROM cgm_chado.v_gene_features g
                     INNER JOIN cgm_chado.featureprop fp ON fp.feature_id = g.feature_id
-                    INNER JOIN cgm_chado.cvterm ct      ON ct.cvterm_id = p.type_id
+                    INNER JOIN cgm_chado.cvterm ct      ON ct.cvterm_id = fp.type_id
                     INNER JOIN cgm_chado.organism o     ON o.organism_id = g.organism_id
                     WHERE o.common_name = 'dicty' 
                     AND ct.name         = 'description'                
@@ -240,10 +241,10 @@ stats:
                   sql: |
                     SELECT COUNT(*) AS c FROM cgm_chado.v_gene_features g
                     INNER JOIN cgm_chado.featureprop fp ON fp.feature_id = g.feature_id
-                    INNER JOIN cgm_chado.cvterm ct      ON ct.cvterm_id = p.type_id
+                    INNER JOIN cgm_chado.cvterm ct      ON ct.cvterm_id = fp.type_id
                     INNER JOIN cgm_chado.organism o     ON o.organism_id = g.organism_id
                     WHERE o.common_name = 'dicty' 
-                    AND cvterm.name     = 'name description'                
+                    AND ct.name     = 'name description'                
                 - column: summary
                   name: 'Genes with summary'
                   sql: |
@@ -335,7 +336,7 @@ stats:
                     AND cv.name  IN ('molecular_function', 'biological_process', 'cellular_component')
                     AND fcv.name LIKE 'evidence_code%'
                     AND fcpc.name IN ('inferred from mutant phenotype', 'inferred from genetic interaction', 'inferred from physical interaction', 'inferred from direct assay')
-                 - column: fully_go_annotated_genes
+                - column: fully_go_annotated_genes
                   name: 'Fully GO annotated genes, manually, all three aspects'
                   sql: |
                     SELECT COUNT( DISTINCT g.feature_id ) AS c FROM cgm_chado.v_gene_features g 
@@ -472,7 +473,8 @@ stats:
                     SELECT COUNT(*) AS c FROM cgm_chado.featureprop fp
                     WHERE fp.value LIKE 'Has Wiki Page'
         
-        - name: curation_stats
+        - table: curation_stats
+          name: Stats by curator
           columns:
                 - column: timecreated
                   name: 'Date'

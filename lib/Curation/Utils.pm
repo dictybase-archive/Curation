@@ -50,7 +50,7 @@ sub start {
     my $floc = Chado::Featureloc->get_single_row(
         { feature_id => $feature->feature_id } );
         
-    my $start = $floc->fmin < $floc->fmax ? $floc->fmin : $floc->fmax;
+    $start = $floc->fmin < $floc->fmax ? $floc->fmin : $floc->fmax;
     return $start;
 }
 
@@ -64,7 +64,7 @@ sub end {
     my $floc = Chado::Featureloc->get_single_row(
         { feature_id => $feature->feature_id } );
 
-    my $end = $floc->fmin > $floc->fmax ? $floc->fmin : $floc->fmax;
+    $end = $floc->fmin > $floc->fmax ? $floc->fmin : $floc->fmax;
     return $end;
 }
 

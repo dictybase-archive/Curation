@@ -98,8 +98,8 @@ sub startup {
     $router->route('/curation/stats')->name('stats')->to('statistics#index');
     $router->route('/curation/stats/total')->name('stats')->via('get')
         ->to('statistics#total', format => 'json');
-    $router->route('/curation/stats/update')
-        ->to('statistics#update', format => 'text');    
+#    $router->route('/curation/stats/update')
+#        ->to('statistics#update', format => 'text');    
     
     ## not used any more, moved to bulk update from one-by-one
 #    $bridge->route('reference/:id/gene/:gene_id/topics/')->via('post')

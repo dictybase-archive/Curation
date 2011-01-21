@@ -11,17 +11,19 @@ sub total {
     my ($self) = @_;
     my $dbh = $self->app->stats_dbh;
 
+    use Data::Dumper;
+
     my $config = $self->app->config->{stats};
     my $parser = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d' );
 
     my $resultset;
 
     foreach my $table ( @{ $config->{tables} } ) {
-        next if $table->{name} ne 'stats';
+        next if $table->{table} ne 'stats';
 
         my @columns = map { $_->{column} } @{ $table->{columns} };
         my $query =
-            'select ' . join( ',', @columns ) . ' from ' . $table->{name};
+            'select ' . join( ',', @columns ) . ' from ' . $table->{table};
 
         my $sth = $dbh->prepare($query);
         $sth->execute;
@@ -44,6 +46,7 @@ sub total {
             }
         }
     }
+
     $self->render( json => $resultset );
 }
 
