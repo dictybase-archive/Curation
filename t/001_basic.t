@@ -131,7 +131,6 @@ SKIP: {
     ## unlink genes
     $t->delete_ok("$location/gene/$gene_id")
         ->status_is( 200, 'successful response for gene deletion' );
-
 }
 
 ## delete reference
