@@ -22,7 +22,6 @@
         <script type="text/javascript" src="/static/curation/js/yui/build/yahoo/yahoo.js"></script>
         <script type="text/javascript" src="/static/curation/js/yui/build/yuiloader/yuiloader-min.js"></script>
         
-        <script type="text/javascript" src="/static/curation/js/yui/build/yahoo-dom-event/yahoo-dom-event.js"></script>
     
         <script type="text/javascript" src="/static/curation/js/yui/build/container/container_core-min.js"></script>
         <script type="text/javascript" src="/static/curation/js/yui/build/menu/menu-min.js"></script>

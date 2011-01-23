@@ -2,14 +2,14 @@
 - name:            "development.server"
   server_class:    "FCGI::Engine::Manager::Server::Plackup"
   scriptname:      "script/curation.psgi"
-  nproc:            2
+  nproc:            1
   pidfile:         "/tmp/curation.pid"
   socket:          "/tmp/curation.socket"
   additional_args: ['-E',  'development']
 - name:            "staging.server"
   server_class:    "FCGI::Engine::Manager::Server::Plackup"
   scriptname:      "script/curation.psgi"
-  nproc:            2
+  nproc:            1
   pidfile:         "/tmp/curation.pid"
   socket:          "/tmp/curation.socket"
   additional_args: ['-E',  'staging']

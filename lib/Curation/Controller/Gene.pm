@@ -9,6 +9,7 @@ use dicty::DB::AutoDBI;
 use POSIX qw/strftime/;
 use Bio::DB::SeqFeature::Store;
 use File::Spec::Functions;
+use Modware::Publication::DictyBase;
 
 # Other modules:
 use base 'Mojolicious::Controller';
@@ -512,6 +513,7 @@ sub update {
         $old_floc->update();
     };
     $self->failure( 'Error updating gene location: ' . $@ ) if $@;
+    
     ##  feature relationship
     my $frel;
     eval {
@@ -544,7 +546,7 @@ sub update {
         {   type_id   => $part_of_cvterm->cvterm_id,
             object_id => $prediction->feature_id,
         }
-        );
+    );
     $self->failure("No exons found for $id") if !@prediction_exons;
 
     foreach my $prediction_exon (@prediction_exons) {
@@ -644,8 +646,19 @@ sub update {
         $fprop->update();
     };
     $self->failure( 'Error adding paragraph: ' . $@ ) if $@;
-    $dbh->commit;
 
+    ## add "Curated model" reference
+    my ($reference) = Modware::Publication::DictyBase->search(
+        title => 'Curated model' );
+    
+    eval {
+        my $sth = $dbh->prepare(
+            "INSERT INTO feature_pub (feature_id, pub_id) values(?,?)"
+        );
+        $sth->execute( $curated->feature_id, $reference->pub_id );
+    };
+    $self->failure( 'Error adding reference: ' . $@ ) if $@;
+    $dbh->commit;
     #$self->clean_cache($id);
 }
 
@@ -758,9 +771,13 @@ sub add_featureprop {
         foreach my $value (@values) {
             Chado::Featureprop->create(
                 {   feature_id => $feature->feature_id,
-                    type_id =>
-                        Chado::Cvterm->get_single_row( { name => $type } )
-                        ->cvterm_id,
+                    type_id    => Chado::Cvterm->get_single_row(
+                        {   name  => $type,
+                            cv_id => Chado::Cv->get_single_row(
+                                { name => 'autocreated' }
+                                )->cv_id
+                        }
+                        )->cvterm_id,
                     value => $value,
                     rank  => $i
                 }

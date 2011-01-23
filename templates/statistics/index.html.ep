@@ -1,0 +1,197 @@
+% layout 'default';
+    <div id="container-blank">
+    <h1>dictyBase curation stats</h1>
+    
+    <table>
+        <tr>
+            <td>
+                <div id="placeholder" style="width:600px;height:600px;"></div>
+            </td>
+            <td>
+                <p>Try turning categories on/off with the checkboxes below.</p>
+                <p id="choices">Show:</p>
+            </td>
+        </tr>
+    </table>
+</div>
+<script id="source" language="javascript" type="text/javascript">
+
+/**
+ * jQuery.fn.sortElements
+ * --------------
+ * @param Function comparator:
+ *   Exactly the same behaviour as [1,2,3].sort(comparator)
+ *   
+ * @param Function getSortable
+ *   A function that should return the element that is
+ *   to be sorted. The comparator will run on the
+ *   current collection, but you may want the actual
+ *   resulting sort to occur on a parent or another
+ *   associated element.
+ *   
+ *   E.g. $('td').sortElements(comparator, function(){
+ *      return this.parentNode; 
+ *   })
+ *   
+ *   The <td>'s parent (<tr>) will be sorted instead
+ *   of the <td> itself.
+ */
+jQuery.fn.sortElements = (function(){
+ 
+    var sort = [].sort;
+ 
+    return function(comparator, getSortable) {
+ 
+        getSortable = getSortable || function(){return this;};
+ 
+        var placements = this.map(function(){
+ 
+            var sortElement = getSortable.call(this),
+                parentNode = sortElement.parentNode,
+ 
+                // Since the element itself will change position, we have
+                // to have some way of storing its original position in
+                // the DOM. The easiest way is to have a 'flag' node:
+                nextSibling = parentNode.insertBefore(
+                    document.createTextNode(''),
+                    sortElement.nextSibling
+                );
+                
+            return function() {
+ 
+                if (parentNode === this) {
+                    throw new Error(
+                        "You can't sort elements if any one is a descendant of another."
+                    );
+                }
+ 
+                // Insert before flag:
+                parentNode.insertBefore(this, nextSibling);
+                // Remove flag:
+                parentNode.removeChild(nextSibling);
+
+            };
+ 
+        });
+ 
+        return sort.call(this, comparator).each(function(i){
+            placements[i].call(getSortable.call(this));
+        });
+ 
+    };
+ 
+})();
+
+$(function () {
+    $.ajax({
+        url: '/curation/stats/total',
+        method: 'GET',
+        dataType: 'json',
+        success: onDataReceived
+    });
+    
+    function onDataReceived(series) {
+        // we get all the data in one go, if we only got partial
+        // data, we could merge it with what we already got
+        var plot;
+        
+        // insert checkboxes
+        var choiceContainer = $("#choices");
+        $.each(series,
+        function(key, val) {
+            choiceContainer.append('<br/><input type="checkbox" name="' + key 
+            +'" checked="checked" id="id' + key + '"><label for="id' + key 
+            + '" name="' + key + '">' + val.label + '</label>');
+        });                    
+        
+        $('label').sortElements(function(a, b){
+            return $(a).text() > $(b).text() ? 1 : -1;
+        });
+        
+        $('label').each(function() {
+            var key = $(this).attr("name");
+                checkbox = $('#' + $(this).attr("for"));
+            checkbox.insertBefore(this);
+        });
+        console.log('done');
+         // hard-code color indices to prevent them from shifting as
+        // countries are turned on/off
+        var i = 0;
+        $.each(series,
+        function(key, val) {
+            val.color = i;
+            val.label += ' = 0';
+            ++i;
+        });
+
+        function plotAccordingToChoices() {
+            var data = [];
+            choiceContainer.find("input:checked").each(function() {
+                var key = $(this).attr("name");
+                if (key && series[key])
+                    data.push(series[key]);
+            });
+
+            if (data.length > 0)
+            plot = $.plot($("#placeholder"), data, {
+                yaxis: { min: 0 },
+                xaxis: { mode: "time" },
+                series: {
+                    lines: { show: true }
+                },
+                crosshair: { mode: "x" },
+                grid: { hoverable: true, autoHighlight: false }, 
+            });
+            var legends = $("#placeholder .legendLabel");
+            legends.each(function () {
+                // fix the widths so they don't jump around
+                $(this).css('width', $(this).width());
+            });
+
+            var updateLegendTimeout = null;
+            var latestPosition = null;
+            
+            function updateLegend() {
+                updateLegendTimeout = null;
+    
+                var pos = latestPosition;
+    
+                var axes = plot.getAxes();
+                if (pos.x < axes.xaxis.min || pos.x > axes.xaxis.max ||
+                    pos.y < axes.yaxis.min || pos.y > axes.yaxis.max)
+                    return;
+
+                var i, j, dataset = plot.getData();
+                for (i = 0; i < dataset.length; ++i) {
+                    var series = dataset[i];
+
+                    // find the nearest points, x-wise
+                    for (j = 0; j < series.data.length; ++j)
+                        if (series.data[j][0] > pos.x)
+                            break;
+        
+                    // now interpolate
+                    var y, p1 = series.data[j - 1], p2 = series.data[j];
+                    if (p1 == null)
+                        y = p2[1];
+                    else if (p2 == null)
+                        y = p1[1];
+                    else
+                        y = p1[1] + (p2[1] - p1[1]) * (pos.x - p1[0]) / (p2[0] - p1[0]);
+
+                    legends.eq(i).text(series.label.replace(/=.*/, "= " + y.toFixed(0)));
+                }
+            }
+
+            $("#placeholder").bind("plothover",  function (event, pos, item) {
+                latestPosition = pos;
+                if (!updateLegendTimeout)
+                   updateLegendTimeout = setTimeout(updateLegend, 50);
+            });
+        }
+        
+        plotAccordingToChoices();
+        choiceContainer.find("input").click(plotAccordingToChoices);
+    }
+});
+</script>

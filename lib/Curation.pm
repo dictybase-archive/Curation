@@ -9,6 +9,7 @@ use Curation::Utils;
 use Modware::DataSource::Chado;
 use Schema::Curation::Result::Curator;
 use Schema::Curation::Result::CuratorFeaturePubprop;
+use DBI;
 use base 'Mojolicious';
 use ModConfig;
 
@@ -20,6 +21,7 @@ __PACKAGE__->attr('has_config');
 __PACKAGE__->attr('utils');
 __PACKAGE__->attr('dbh');       ## dicty legacy model connection
 __PACKAGE__->attr('schema');    ## Modware::DataSource::Chado model connection
+__PACKAGE__->attr('stats_dbh'); ## local stats database connection
 
 # This method will run once at server start
 sub startup {
@@ -80,28 +82,30 @@ sub startup {
     $bridge->route('reference/:id/')->via('get')
         ->to( 'reference#show', format => 'html' );
     $bridge->route('reference/:id/')->via('delete')->to('reference#delete');
-
     $bridge->route('reference/pubmed/:pubmed_id/')->via('get')
         ->to( 'reference#get_pubmed', format => 'html' );
-
     $bridge->route('reference/pubmed/:pubmed_id/')->via('post')
         ->to( 'reference#create_pubmed', format => 'html' );
-
     $bridge->route('reference/:id/gene/:gene_id/')->via('post')
         ->to('reference#link_gene');
     $bridge->route('reference/:id/gene/:gene_id/')->via('delete')
         ->to('reference#unlink_gene');
-
     $bridge->route('reference/:id/gene/:gene_id/topics/')->via('get')
         ->to( 'reference#get_topics', format => 'json' );
     $bridge->route('reference/:id/gene/:gene_id/topics/')->via('put')
         ->to('reference#update_topics');
-
+    
+    $router->route('/curation/stats')->name('stats')->to('statistics#index');
+    $router->route('/curation/stats/total')->name('stats')->via('get')
+        ->to('statistics#total', format => 'json');
+#    $router->route('/curation/stats/update')
+#        ->to('statistics#update', format => 'text');    
+    
     ## not used any more, moved to bulk update from one-by-one
-    $bridge->route('reference/:id/gene/:gene_id/topics/')->via('post')
-        ->to('reference#add_topic');
-    $bridge->route('reference/:id/gene/:gene_id/topics/:topic')->via('delete')
-        ->to('reference#delete_topic');
+#    $bridge->route('reference/:id/gene/:gene_id/topics/')->via('post')
+#        ->to('reference#add_topic');
+#    $bridge->route('reference/:id/gene/:gene_id/topics/:topic')->via('delete')
+#        ->to('reference#delete_topic');
 
     # config file setup
     $self->set_config;
@@ -155,6 +159,15 @@ sub set_dbh {
     #    $schema->register_class( $name, $class );
 
     $self->schema($schema);
+    
+    my $folder = $self->home->rel_dir('db');
+    return if !-e $folder;
+    
+    my $file = catfile( $folder, $config->{stats} );
+    
+    my $stats_dbh = DBI->connect( 'dbi:SQLite:dbname='.$file, '', '' );
+    $stats_dbh->{AutoCommit} = 1;
+    $self->stats_dbh($stats_dbh);
 }
 
 1;

@@ -6,11 +6,12 @@ use IO::File;
 use Getopt::Long;
 use File::Spec::Functions;
 
-my ( $help, $dbfile);
+my ( $help, $dbfile, $config );
 
 GetOptions(
-    'h|help'    => \$help,
+    'h|help'       => \$help,
     'd|database=s' => \$dbfile,
+    'c|config=s'   => \$config
 );
 pod2usage( -verbose => 2 ) if $help;
 die 'no database filename provided' if !$dbfile;

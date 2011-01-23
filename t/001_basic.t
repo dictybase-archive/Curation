@@ -29,15 +29,19 @@ $t->get_ok('/curation/login')
     ->content_like( qr/Username/i,          'got username prompt' )
     ->content_like( qr/<tr class="menu">/i, 'got top menu' );
 
-my $dbfile = catfile( "$FindBin::Bin/../db", $config->{database}->{login} );
-my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbfile", '', '' );
+SKIP: {
+    skip 'user authentication migrated to CHADO', 17;
 
-my $sql = 'SELECT name, password FROM users;';
-my $sth = $dbh->prepare($sql);
-$sth->execute;
+    my $dbfile = catfile( "$FindBin::Bin/../db", $config->{database}->{login} );
+    my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbfile", '', '' );
 
-my ( $name, $password ) = $sth->fetchrow_array;
+    my $sql = 'SELECT name, password FROM users;';
+    my $sth = $dbh->prepare($sql);
+    $sth->execute;
 
+   
+}
+my ( $name, $password ) = ('CGM_DDB_KPIL','dicty123');
 my $options = {
     password => $password,
     username => $name,
@@ -80,7 +84,7 @@ $t->get_ok($location)->status_is( 200, 'successful response for reference' )
     ->content_like( qr/PMID:/i,                  'PubMed is returned' );
 
 ## attach gene
-my $name = 'test_CURATED';
+$name = 'test_CURATED';
 my ($gene) = dicty::Search::Gene->find(
     -name       => $name,
     -is_deleted => 'false'

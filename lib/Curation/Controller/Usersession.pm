@@ -111,5 +111,4 @@ sub create_user {
     $self->redirect_to('login');
 }
 
-
 1;
