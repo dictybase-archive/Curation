@@ -24,7 +24,8 @@ my $builder = Module::Build->new(
         'dicty::Search::Gene'    => ''
     },
     add_to_cleanup => ['Curation- *'],
+);
 
-    $builder->create_build_script();
+$builder->create_build_script();
 
-        1;
+1;
