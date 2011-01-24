@@ -189,7 +189,7 @@ my $builder = Module::Build->new(
         #        'B::Hooks::EndOfScope'            => '0.09',
         #        'version::vxs'                    => '0.74',
     },
-    add_to_cleanup => ['Curation- *'],
+    add_to_cleanup => ['Curation-*'],
 );
 
 $builder->create_build_script();
