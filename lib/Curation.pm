@@ -32,9 +32,9 @@ sub startup {
 
 # Note that you should use a custom secret to make signed cookies really secure.
     $self->secret('dicty4ever');
-    $self->session->cookie_path('/curation');
-    $self->session->cookie_name('dictybasecuration');
-    $self->session->default_expiration(18000);
+    $self->sessions->cookie_path('/curation');
+    $self->sessions->cookie_name('dictybasecuration');
+    $self->sessions->default_expiration(18000);
 
     # Routes
     my $router = $self->routes;
@@ -93,7 +93,7 @@ sub startup {
     $bridge->route('reference/:id/gene/:gene_id/topics/')->via('get')
         ->to( 'reference#get_topics', format => 'json' );
     $bridge->route('reference/:id/gene/:gene_id/topics/')->via('put')
-        ->to('reference#update_topics');
+        ->to('reference#update_topics', format => 'text');
     
     $router->route('/curation/stats')->name('stats')->to('statistics#index');
     $router->route('/curation/stats/total')->name('stats')->via('get')

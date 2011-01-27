@@ -29,18 +29,15 @@ $t->get_ok('/curation/login')
     ->content_like( qr/Username/i,          'got username prompt' )
     ->content_like( qr/<tr class="menu">/i, 'got top menu' );
 
-SKIP: {
-    skip 'user authentication migrated to CHADO', 17;
+## -- 'user authentication migrated to CHADO'
+#
+#    my $dbfile = catfile( "$FindBin::Bin/../db", $config->{database}->{login} );
+#    my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbfile", '', '' );
+#
+#    my $sql = 'SELECT name, password FROM users;';
+#    my $sth = $dbh->prepare($sql);
+#    $sth->execute;
 
-    my $dbfile = catfile( "$FindBin::Bin/../db", $config->{database}->{login} );
-    my $dbh = DBI->connect( "dbi:SQLite:dbname=$dbfile", '', '' );
-
-    my $sql = 'SELECT name, password FROM users;';
-    my $sth = $dbh->prepare($sql);
-    $sth->execute;
-
-   
-}
 my ( $name, $password ) = ('CGM_DDB_KPIL','dicty123');
 my $options = {
     password => $password,
@@ -52,7 +49,7 @@ $t->post_form_ok( '/curation/usersession', '', $options )
 
 $t->get_ok('/curation')
     ->status_is( 200, 'successful response for curation index page' )
-    ->content_type_like( qr/html/, 'html response for curation index pahe' )
+    ->content_type_like( qr/html/, 'html response for curation index page' )
     ->content_like( qr/$name/i, 'got username displayed' );
 
 my $id = 1;
