@@ -32,9 +32,9 @@ sub startup {
 
 # Note that you should use a custom secret to make signed cookies really secure.
     $self->secret('dicty4ever');
-    $self->sessions->cookie_path('/curation');
-    $self->sessions->cookie_name('dictybasecuration');
-    $self->sessions->default_expiration(18000);
+    $self->session->cookie_path('/curation');
+    $self->session->cookie_name('dictybasecuration');
+    $self->session->default_expiration(18000);
 
     # Routes
     my $router = $self->routes;
