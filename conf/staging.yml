@@ -171,7 +171,7 @@ database:
         AutoCommit: 1
 
 cache:
-    cleanup_url: http://192.168.60.10/cache/gene/
+    cleanup_url: http://testdb.dictybase.org/cache/gene/
 
 stats:
     tables:
