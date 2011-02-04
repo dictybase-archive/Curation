@@ -216,7 +216,6 @@ stats:
                     WHERE o.common_name = 'dicty' 
                     AND ct.name         = 'paragraph_no' 
                     AND p.paragraph_text LIKE '%comprehensively annotated%'
-                    AND length(fp.value) > 0
                 - column: basic_annotations
                   name: 'Basic annotations'
                   sql: |
@@ -228,7 +227,6 @@ stats:
                     WHERE o.common_name = 'dicty' 
                     AND ct.name         = 'paragraph_no' 
                     AND p.paragraph_text LIKE '%Basic annotations%'
-                    AND length(fp.value) > 0
                 - column: genes_descriptions
                   name: 'Genes with descriptions'
                   sql: |
@@ -258,7 +256,6 @@ stats:
                     WHERE o.common_name = 'dicty' 
                     AND ct.name        = 'paragraph_no'
                     AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
-                    AND length(fp.value) > 0
                 - column: gene_prodicts 
                   name: 'Genes with gene product (manual + electronic)'
                   sql: |
@@ -561,7 +558,6 @@ stats:
                     WHERE ct.name = 'paragraph_no' 
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF') 
                     AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
-                    AND length(fp.value) > 0
                     UNION
                     SELECT COUNT(*) AS c, 'CGM_DDB_PASC' AS curator
                     FROM cgm_ddb.paragraph p 
@@ -570,7 +566,6 @@ stats:
                     WHERE ct.name = 'paragraph_no' 
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG') 
                     AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
-                    AND length(fp.value) > 0
                     UNION
                     SELECT COUNT(*) AS c, 'CGM_DDB_KERRY' AS curator
                     FROM cgm_ddb.paragraph p 
@@ -579,7 +574,6 @@ stats:
                     WHERE ct.name = 'paragraph_no' 
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS') 
                     AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
-                    AND length(fp.value) > 0
                     UNION
                     SELECT COUNT(*) AS c, 'CGM_DDB_BOBD' AS curator
                     FROM cgm_ddb.paragraph p 
@@ -588,7 +582,6 @@ stats:
                     WHERE ct.name = 'paragraph_no' 
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD') 
                     AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
-                    AND length(fp.value) > 0
                 - column: comprehensively_annotated
                   name: 'Genes comprehencively annotated'
                   sql: |
@@ -599,7 +592,6 @@ stats:
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%comprehensively annotated%'
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD')
-                    AND length(fp.value) > 0
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PFEY' AS curator
                     FROM cgm_chado.featureprop fp
@@ -608,7 +600,6 @@ stats:
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%comprehensively annotated%'
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF')
-                    AND length(fp.value) > 0
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PASC' AS curator
                     FROM cgm_chado.featureprop fp
@@ -617,7 +608,6 @@ stats:
                     WHERE ct.name = 'paragraph_no' 
                     AND p.paragraph_text LIKE '%comprehensively annotated%'
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG')
-                    AND length(fp.value) > 0
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_KERRY' AS curator
                     FROM cgm_chado.featureprop fp
@@ -626,7 +616,6 @@ stats:
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%comprehensively annotated%'
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS')
-                    AND length(fp.value) > 0
                 - column: basic_annotations
                   name: 'Basic annotations'
                   sql: |
@@ -637,7 +626,6 @@ stats:
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%Basic annotations%'
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD')
-                    AND length(fp.value) > 0
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PFEY' AS curator
                     FROM cgm_chado.featureprop fp
@@ -646,7 +634,6 @@ stats:
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%Basic annotations%'
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF')
-                    AND length(fp.value) > 0
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PASC' AS curator
                     FROM cgm_chado.featureprop fp
@@ -655,7 +642,6 @@ stats:
                     WHERE ct.name = 'paragraph_no' 
                     AND p.paragraph_text LIKE '%Basic annotations%'
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG')
-                    AND length(fp.value) > 0
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_KERRY' AS curator
                     FROM cgm_chado.featureprop fp
@@ -664,6 +650,5 @@ stats:
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%Basic annotations%'
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS')
-                    AND length(fp.value) > 0
           group_by: curator
 

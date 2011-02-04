@@ -88,7 +88,8 @@ $xls->close();
 ### Create a new multipart message:
 my $msg = MIME::Lite->new(
     From    => 'dictybase@northwestern.edu',
-    To      => 'dictybase@northwestern.edu',
+#    To      => 'dictybase@northwestern.edu',
+    To      => 'y-bushmanova@northwestern.edu',
     Subject => 'dictyBase curation stats',
     Type    => 'multipart/mixed'
 );
@@ -104,5 +105,5 @@ $msg->attach(
     Disposition => 'attachment'
 );
 ### use Net:SMTP to do the sending
-$msg->send('smtp','lulu.it.northwestern.edu', Debug => 1 );
+$msg->send('smtp','lulu.it.northwestern.edu', Debug => 0 );
 
