@@ -8,6 +8,7 @@ use File::Spec::Functions;
 use Spreadsheet::WriteExcel::Big;
 use YAML;
 use MIME::Lite;
+use POSIX qw/strftime/;
 
 my ( $help, $db_file, $conf_file, $output );
 
@@ -21,6 +22,7 @@ GetOptions(
 pod2usage( -verbose => 2 ) if $help;
 die 'no database filename provided' if !$db_file;
 die 'no config filename provided'   if !$conf_file;
+my $date = strftime "%Y-%m-%d", localtime;
 
 my $config = YAML::LoadFile($conf_file);
 
@@ -91,11 +93,16 @@ my $msg = MIME::Lite->new(
     Type    => 'multipart/mixed'
 );
 $msg->attach(
+    Type     =>'TEXT',
+    Data     =>"Greetings from dictyBase. Here is the curation statistics as of $date."
+);
+
+$msg->attach(
     Type     => 'application/x-excel',
     Path     => $output,
     Filename => 'dictystats.xls',
     Disposition => 'attachment'
 );
 ### use Net:SMTP to do the sending
-$msg->send('smtp','lulu.it.northwestern.edu', Debug => 0 );
+$msg->send('smtp','lulu.it.northwestern.edu', Debug => 1 );
 

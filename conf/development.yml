@@ -210,7 +210,7 @@ stats:
                   sql: |
                     SELECT COUNT (fp.feature_id) AS c FROM cgm_chado.v_gene_features g
                     INNER JOIN cgm_chado.featureprop fp ON fp.feature_id = g.feature_id
-                    INNER JOIN cgm_ddb.paragraph p      ON TO_NCHAR(fp.value) = p.paragraph_no
+                    INNER JOIN cgm_ddb.paragraph p      ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id
                     INNER JOIN cgm_chado.organism o     ON o.organism_id = g.organism_id
                     WHERE o.common_name = 'dicty' 
@@ -222,7 +222,7 @@ stats:
                   sql: |
                     SELECT COUNT (fp.feature_id) AS c FROM cgm_chado.v_gene_features g
                     INNER JOIN cgm_chado.featureprop fp ON fp.feature_id = g.feature_id
-                    INNER JOIN cgm_ddb.paragraph p      ON TO_NCHAR(fp.value) = p.paragraph_no
+                    INNER JOIN cgm_ddb.paragraph p      ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct      ON fp.type_id     = ct.cvterm_id
                     INNER JOIN cgm_chado.organism o     ON o.organism_id = g.organism_id
                     WHERE o.common_name = 'dicty' 
@@ -253,7 +253,7 @@ stats:
                     SELECT count(*) AS c FROM cgm_chado.v_gene_features g
                     INNER JOIN cgm_chado.featureprop fp ON fp.feature_id  = g.feature_id
                     INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id
-                    INNER JOIN cgm_ddb.paragraph p      ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_ddb.paragraph p      ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.organism o     ON o.organism_id = g.organism_id
                     WHERE o.common_name = 'dicty' 
                     AND ct.name        = 'paragraph_no'
@@ -556,7 +556,7 @@ stats:
                   sql: |
                     SELECT count ( DISTINCT p.paragraph_no ) AS c, 'CGM_DDB_PFEY' AS curator
                     FROM cgm_ddb.paragraph p 
-                    INNER JOIN cgm_chado.featureprop fp ON TO_NCHAR(fp.value) = p.paragraph_no 
+                    INNER JOIN cgm_chado.featureprop fp ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no 
                     INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id 
                     WHERE ct.name = 'paragraph_no' 
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF') 
@@ -565,7 +565,7 @@ stats:
                     UNION
                     SELECT COUNT(*) AS c, 'CGM_DDB_PASC' AS curator
                     FROM cgm_ddb.paragraph p 
-                    INNER JOIN cgm_chado.featureprop fp ON TO_NCHAR(fp.value) = p.paragraph_no 
+                    INNER JOIN cgm_chado.featureprop fp ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no 
                     INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id 
                     WHERE ct.name = 'paragraph_no' 
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG') 
@@ -574,7 +574,7 @@ stats:
                     UNION
                     SELECT COUNT(*) AS c, 'CGM_DDB_KERRY' AS curator
                     FROM cgm_ddb.paragraph p 
-                    INNER JOIN cgm_chado.featureprop fp ON TO_NCHAR(fp.value) = p.paragraph_no 
+                    INNER JOIN cgm_chado.featureprop fp ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no 
                     INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id 
                     WHERE ct.name = 'paragraph_no' 
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS') 
@@ -583,7 +583,7 @@ stats:
                     UNION
                     SELECT COUNT(*) AS c, 'CGM_DDB_BOBD' AS curator
                     FROM cgm_ddb.paragraph p 
-                    INNER JOIN cgm_chado.featureprop fp ON TO_NCHAR(fp.value) = p.paragraph_no 
+                    INNER JOIN cgm_chado.featureprop fp ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no 
                     INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id 
                     WHERE ct.name = 'paragraph_no' 
                     AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD') 
@@ -594,7 +594,7 @@ stats:
                   sql: |
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_BOBD' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%comprehensively annotated%'
@@ -603,7 +603,7 @@ stats:
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PFEY' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%comprehensively annotated%'
@@ -612,7 +612,7 @@ stats:
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PASC' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
                     WHERE ct.name = 'paragraph_no' 
                     AND p.paragraph_text LIKE '%comprehensively annotated%'
@@ -621,7 +621,7 @@ stats:
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_KERRY' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%comprehensively annotated%'
@@ -632,7 +632,7 @@ stats:
                   sql: |
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_BOBD' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%Basic annotations%'
@@ -641,7 +641,7 @@ stats:
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PFEY' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%Basic annotations%'
@@ -650,7 +650,7 @@ stats:
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PASC' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
                     WHERE ct.name = 'paragraph_no' 
                     AND p.paragraph_text LIKE '%Basic annotations%'
@@ -659,7 +659,7 @@ stats:
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_KERRY' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NCHAR(fp.value)= p.paragraph_no
+                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
                     WHERE ct.name = 'paragraph_no'
                     AND p.paragraph_text LIKE '%Basic annotations%'
