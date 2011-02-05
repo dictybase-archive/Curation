@@ -210,23 +210,27 @@ stats:
                   sql: |
                     SELECT COUNT (fp.feature_id) AS c FROM cgm_chado.v_gene_features g
                     INNER JOIN cgm_chado.featureprop fp ON fp.feature_id = g.feature_id
-                    INNER JOIN cgm_ddb.paragraph p      ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id
-                    INNER JOIN cgm_chado.organism o     ON o.organism_id = g.organism_id
-                    WHERE o.common_name = 'dicty' 
-                    AND ct.name         = 'paragraph_no' 
-                    AND p.paragraph_text LIKE '%comprehensively annotated%'
+                    INNER JOIN cgm_chado.organism o     ON o.organism_id    = g.organism_id
+                    WHERE o.common_name = 'dicty'
+                    AND ct.name         = 'paragraph_no'
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_ddb.paragraph p
+                    WHERE TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND p.paragraph_text LIKE '%comprehensively annotated%')
                 - column: basic_annotations
                   name: 'Basic annotations'
                   sql: |
                     SELECT COUNT (fp.feature_id) AS c FROM cgm_chado.v_gene_features g
                     INNER JOIN cgm_chado.featureprop fp ON fp.feature_id = g.feature_id
-                    INNER JOIN cgm_ddb.paragraph p      ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
-                    INNER JOIN cgm_chado.cvterm ct      ON fp.type_id     = ct.cvterm_id
-                    INNER JOIN cgm_chado.organism o     ON o.organism_id = g.organism_id
-                    WHERE o.common_name = 'dicty' 
-                    AND ct.name         = 'paragraph_no' 
-                    AND p.paragraph_text LIKE '%Basic annotations%'
+                    INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id
+                    INNER JOIN cgm_chado.organism o     ON o.organism_id    = g.organism_id
+                    WHERE o.common_name = 'dicty'
+                    AND ct.name         = 'paragraph_no'
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_ddb.paragraph p
+                    WHERE TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND p.paragraph_text LIKE '%Basic annotations%')
                 - column: genes_descriptions
                   name: 'Genes with descriptions'
                   sql: |
@@ -251,11 +255,13 @@ stats:
                     SELECT count(*) AS c FROM cgm_chado.v_gene_features g
                     INNER JOIN cgm_chado.featureprop fp ON fp.feature_id  = g.feature_id
                     INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id
-                    INNER JOIN cgm_ddb.paragraph p      ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.organism o     ON o.organism_id = g.organism_id
                     WHERE o.common_name = 'dicty' 
                     AND ct.name        = 'paragraph_no'
-                    AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_ddb.paragraph p
+                    WHERE TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)'))
                 - column: gene_prodicts 
                   name: 'Genes with gene product (manual + electronic)'
                   sql: |
@@ -551,104 +557,128 @@ stats:
                 - column: summary
                   name: 'Genes with summary'
                   sql: |
-                    SELECT count ( DISTINCT p.paragraph_no ) AS c, 'CGM_DDB_PFEY' AS curator
-                    FROM cgm_ddb.paragraph p 
-                    INNER JOIN cgm_chado.featureprop fp ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no 
-                    INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id 
-                    WHERE ct.name = 'paragraph_no' 
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF') 
-                    AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
+                    SELECT COUNT ( DISTINCT p.paragraph_no ) AS c, 'CGM_DDB_PFEY' AS curator
+                    FROM cgm_ddb.paragraph p
+                    WHERE EXISTS
+                    (SELECT 'a' FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name                     = 'paragraph_no'
+                    AND TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF')
+                    AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)'))
                     UNION
-                    SELECT COUNT(*) AS c, 'CGM_DDB_PASC' AS curator
-                    FROM cgm_ddb.paragraph p 
-                    INNER JOIN cgm_chado.featureprop fp ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no 
-                    INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id 
-                    WHERE ct.name = 'paragraph_no' 
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG') 
-                    AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
+                    SELECT COUNT ( DISTINCT p.paragraph_no ) AS c, 'CGM_DDB_PASC' AS curator
+                    FROM cgm_ddb.paragraph p
+                    WHERE EXISTS
+                    (SELECT 'a' FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name                     = 'paragraph_no'
+                    AND TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG')
+                    AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)'))
                     UNION
-                    SELECT COUNT(*) AS c, 'CGM_DDB_KERRY' AS curator
-                    FROM cgm_ddb.paragraph p 
-                    INNER JOIN cgm_chado.featureprop fp ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no 
-                    INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id 
-                    WHERE ct.name = 'paragraph_no' 
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS') 
-                    AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
+                    SELECT COUNT ( DISTINCT p.paragraph_no ) AS c, 'CGM_DDB_KERRY' AS curator
+                    FROM cgm_ddb.paragraph p
+                    WHERE EXISTS
+                    (SELECT 'a' FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name                     = 'paragraph_no'
+                    AND TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS')
+                    AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)'))
                     UNION
-                    SELECT COUNT(*) AS c, 'CGM_DDB_BOBD' AS curator
-                    FROM cgm_ddb.paragraph p 
-                    INNER JOIN cgm_chado.featureprop fp ON TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no 
-                    INNER JOIN cgm_chado.cvterm ct      ON fp.type_id = ct.cvterm_id 
-                    WHERE ct.name = 'paragraph_no' 
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD') 
-                    AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)')
+                    SELECT COUNT ( DISTINCT p.paragraph_no ) AS c, 'CGM_DDB_BOBD' AS curator
+                    FROM cgm_ddb.paragraph p
+                    WHERE EXISTS
+                    (SELECT 'a' FROM cgm_chado.featureprop fp
+                    INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
+                    WHERE ct.name                     = 'paragraph_no'
+                    AND TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD')
+                    AND NOT REGEXP_LIKE(p.paragraph_text, '<summary( paragraph_no="[[:digit:]]*")*>(<curation_status|\[Curation Status)'))
                 - column: comprehensively_annotated
                   name: 'Genes comprehencively annotated'
                   sql: |
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_BOBD' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
-                    WHERE ct.name = 'paragraph_no'
-                    AND p.paragraph_text LIKE '%comprehensively annotated%'
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD')
+                    WHERE ct.name = 'paragraph_no' 
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_ddb.paragraph p
+                    WHERE TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND p.paragraph_text LIKE '%comprehensively annotated%' 
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD'))
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PFEY' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
-                    WHERE ct.name = 'paragraph_no'
-                    AND p.paragraph_text LIKE '%comprehensively annotated%'
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF')
+                    WHERE ct.name = 'paragraph_no' 
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_ddb.paragraph p
+                    WHERE TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND p.paragraph_text LIKE '%comprehensively annotated%' 
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF'))
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PASC' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
                     WHERE ct.name = 'paragraph_no' 
-                    AND p.paragraph_text LIKE '%comprehensively annotated%'
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG')
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_ddb.paragraph p
+                    WHERE TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND p.paragraph_text LIKE '%comprehensively annotated%' 
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG'))
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_KERRY' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
-                    WHERE ct.name = 'paragraph_no'
-                    AND p.paragraph_text LIKE '%comprehensively annotated%'
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS')
+                    WHERE ct.name = 'paragraph_no' 
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_ddb.paragraph p
+                    WHERE TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND p.paragraph_text LIKE '%comprehensively annotated%' 
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS'))
                 - column: basic_annotations
                   name: 'Basic annotations'
                   sql: |
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_BOBD' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
-                    WHERE ct.name = 'paragraph_no'
-                    AND p.paragraph_text LIKE '%Basic annotations%'
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD')
+                    WHERE ct.name = 'paragraph_no' 
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_ddb.paragraph p
+                    WHERE TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND p.paragraph_text LIKE '%Basic annotations%' 
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} RD'))
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PFEY' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
-                    WHERE ct.name = 'paragraph_no'
-                    AND p.paragraph_text LIKE '%Basic annotations%'
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF')
+                    WHERE ct.name = 'paragraph_no' 
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_ddb.paragraph p
+                    WHERE TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND p.paragraph_text LIKE '%Basic annotations%' 
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PF'))
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_PASC' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
                     WHERE ct.name = 'paragraph_no' 
-                    AND p.paragraph_text LIKE '%Basic annotations%'
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG')
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_ddb.paragraph p
+                    WHERE TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND p.paragraph_text LIKE '%Basic annotations%' 
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} PG'))
                     UNION
                     SELECT COUNT (fp.feature_id) AS c, 'CGM_DDB_KERRY' AS curator
                     FROM cgm_chado.featureprop fp
-                    INNER JOIN cgm_ddb.paragraph p ON TO_NUMBER(TO_NCHAR(fp.value))= p.paragraph_no
                     INNER JOIN cgm_chado.cvterm ct ON fp.type_id = ct.cvterm_id
-                    WHERE ct.name = 'paragraph_no'
-                    AND p.paragraph_text LIKE '%Basic annotations%'
-                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS')
+                    WHERE ct.name = 'paragraph_no' 
+                    AND EXISTS
+                    (SELECT 'a' FROM cgm_ddb.paragraph p
+                    WHERE TO_NUMBER(TO_NCHAR(fp.value)) = p.paragraph_no
+                    AND p.paragraph_text LIKE '%Basic annotations%' 
+                    AND REGEXP_LIKE(p.paragraph_text, '[[:digit:]]{2}-[[:alpha:]]{3}-[[:digit:]]{4} KS'))                  
           group_by: curator
 
