@@ -180,7 +180,7 @@ sub create_pubmed {
             -format => 'medlinexml'
         );
         $citation = $in->next_bibref;
-
+        
         $eutils->reset_parameters(
             -eutil  => 'elink',
             -dbfrom => 'pubmed',
@@ -189,8 +189,13 @@ sub create_pubmed {
         );
 
         my $ls      = $eutils->next_LinkSet;
+        
+        use Data::Dumper;
+        $self->app->log->debug(Dumper $ls);
+
         my $linkout = $ls->next_UrlLink;
         $url = $linkout->get_url if $linkout;
+        $self->app->log->debug(Dumper $url);
     };
 
     $self->app->log->error($@) if $@;
