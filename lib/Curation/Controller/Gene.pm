@@ -366,7 +366,7 @@ sub curation {
 
     my @features =
         $utils->get_features( $reference_feature, $frame, $config, $feature );
-    my $default = $self->default( $config->{features} );
+    my @default = $self->default( $config->{features} );
 
     my $types;
     foreach my $feature (@features) {
@@ -374,7 +374,7 @@ sub curation {
         my $id         = $utils->id($feature);
         $types->{$id}->{id} = $id;
         $types->{$id}->{name} = $id . ' (' . $identifier . ')';
-        $types->{$id}->{default} = 1 if $identifier eq $default;
+        $types->{$id}->{default} = 1 if grep {$_ eq $identifier} @default;
     }
     my @notes = map { $_->value . ' [public]' } Chado::Featureprop->search(
         {   feature_id => $feature->feature_id,
