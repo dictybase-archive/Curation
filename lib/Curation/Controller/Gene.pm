@@ -100,6 +100,7 @@ sub blink {
         $output .=
             '<iframe src="' . $config->{url} . $genbank_id . '"></iframe>';
     }
+    $output ||= "No data available for " . $self->stash('id');
     $self->render( data => $output );
 }
 
@@ -234,7 +235,7 @@ sub blast {
         $params->{types}->{$db_name}->{default} = 1
             if $blast_params->{default} && $blast_params->{default} == 1;
         $params->{types}->{$db_name}->{auto} = 1;
-
+        
         push @{ $params->{types}->{$db_name}->{content} },
             $self->blast_by_database($db_name);
     }
@@ -255,7 +256,7 @@ sub blast_by_database {
     my @features =
         $utils->get_features( $reference_feature, $frame, $config, $feature );
 
-    my $default = $self->default( $config->{features} );
+    my @default = $self->default( $config->{features} );
     my $params  = {};
     $params->{types} = {};
     $params->{order} = [];
@@ -270,7 +271,14 @@ sub blast_by_database {
             $blast_params->{sequence} = $protein;
             push @{ $params->{order} }, $identifier
                 if !exists $params->{types}->{$identifier};
-
+                
+            $params->{types}->{$identifier}->{default} = 1
+               if grep { $_ eq $self->identifier($feature) } @default;
+            
+            use Data::Dumper;
+            $self->app->log->debug( Dumper @default );
+            $self->app->log->debug($identifier);
+            
             $self->client->post_form(
                 $config->{report_url},
                 $blast_params,
@@ -292,9 +300,6 @@ sub blast_by_database {
                         $content;
                 }
             )->process;
-
-            $params->{types}->{$identifier}->{default} = 1
-                if $self->identifier($feature) eq $default;
         }
     }
     $self->stash( caller => 'blast/' . $db_name );
@@ -333,7 +338,7 @@ sub protein {
     my @features =
         $utils->get_features( $reference_feature, $frame, $config, $feature );
 
-    my $default = $self->default( $config->{features} );
+    my @default = $self->default( $config->{features} );
     my $params  = {};
     $params->{types} = {};
     $params->{order} = [];
@@ -348,7 +353,7 @@ sub protein {
             '<pre>' . $utils->protein($feature) . '</pre>';
 
         $params->{types}->{$identifier}->{default} = 1
-            if $identifier eq $default;
+            if grep { $_ eq $identifier } @default;
     }
     $self->stash( caller => 'protein' );
     $self->render( template => 'subtabs', %{$params} );
@@ -820,12 +825,12 @@ sub clean_cache {
 ## --- Some utilss
 sub default {
     my ( $self, $features ) = @_;
-    my $default;
+    my @default;
     foreach my $feature (@$features) {
         next if !$feature->{default};
-        $default = $self->identifier($feature);
+        push @default, $self->identifier($feature);
     }
-    return $default;
+    return @default;
 }
 
 sub identifier {
