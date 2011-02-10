@@ -275,10 +275,6 @@ sub blast_by_database {
             $params->{types}->{$identifier}->{default} = 1
                if grep { $_ eq $self->identifier($feature) } @default;
             
-            use Data::Dumper;
-            $self->app->log->debug( Dumper @default );
-            $self->app->log->debug($identifier);
-            
             $self->client->post_form(
                 $config->{report_url},
                 $blast_params,
