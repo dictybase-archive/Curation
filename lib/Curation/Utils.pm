@@ -96,7 +96,7 @@ sub subfeatures {
     );
 
     ## get all subfeatures
-    my @subfeatures = map {
+    my @subfeatures = grep { $_->is_deleted == 0} map {
         Chado::Feature->get_single_row( { feature_id => $_->subject_id } )
         }
         grep { $_->type == $part_of_cvterm->cvterm_id }
