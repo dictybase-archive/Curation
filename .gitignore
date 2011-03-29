@@ -16,3 +16,6 @@ deploy*
 _build
 MYMETA.yml
 db
+*.yml
+!*.sample.*
+
