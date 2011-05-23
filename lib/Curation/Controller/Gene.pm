@@ -10,7 +10,8 @@ use POSIX qw/strftime/;
 use Bio::DB::SeqFeature::Store;
 use File::Spec::Functions;
 use Modware::Publication::DictyBase;
-
+use Mojo::UserAgent;
+    
 # Other modules:
 use base 'Mojolicious::Controller';
 
@@ -252,7 +253,7 @@ sub blast_by_database {
     my $feature           = $self->get_gene( $self->stash('id') );
     my $frame             = $self->frame($feature);
     my $reference_feature = $utils->reference_feature($feature);
-
+    my $ua = Mojo::UserAgent->new;
     my @features =
         $utils->get_features( $reference_feature, $frame, $config, $feature );
 
@@ -275,12 +276,12 @@ sub blast_by_database {
             $params->{types}->{$identifier}->{default} = 1
                if grep { $_ eq $self->identifier($feature) } @default;
             
-            $self->client->post_form(
+            $ua->post_form(
                 $config->{report_url},
                 $blast_params,
                 sub {
-                    my $client = shift;
-                    my $report = $client->res->body;
+                    my ($ua, $tx) = @_;
+                    my $report = $tx->res->body;
 
                     my $error = 'error retrieving BLAST results'
                         if !$report || $report =~ m{Sorry}i;
@@ -295,7 +296,7 @@ sub blast_by_database {
                     push @{ $params->{types}->{$identifier}->{content} },
                         $content;
                 }
-            )->process;
+            );
         }
     }
     $self->stash( caller => 'blast/' . $db_name );
