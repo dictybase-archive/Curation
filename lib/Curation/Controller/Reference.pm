@@ -142,10 +142,15 @@ sub get_reference {
         $ref = Modware::Publication::DictyBase->find_by_pub_id(
             $self->stash('id') );
     };
-    return $ref
-        || $self->render_exception(
-        'Reference not found: ' . $self->stash('id') );
+    if ( !$ref ) {
+        $self->render_exception(
+            'Reference not found: ' . $self->stash('id') );
+    }
+    else {
+        return $ref;
+    }
 }
+
 
 sub get_pubmed {
     my ($self) = @_;

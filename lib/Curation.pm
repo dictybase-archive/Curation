@@ -2,22 +2,19 @@ package Curation;
 
 use strict;
 use warnings;
-use YAML;
 use dicty::DBH;
-use File::Spec::Functions;
 use Curation::Utils;
+use File::Spec::Functions;
 use Modware::DataSource::Chado;
 use Schema::Curation::Result::Curator;
 use Schema::Curation::Result::CuratorFeaturePubprop;
 use DBI;
-use base 'Mojolicious';
+use Mojo::Base 'Mojolicious';
 use ModConfig;
 
 use version;
 our $VERSION = qv('2.0.0');
 
-__PACKAGE__->attr('config');
-__PACKAGE__->attr('has_config');
 __PACKAGE__->attr('utils');
 __PACKAGE__->attr('dbh');       ## dicty legacy model connection
 __PACKAGE__->attr('schema');    ## Modware::DataSource::Chado model connection
@@ -29,12 +26,13 @@ sub startup {
 
     # default log level
     $self->log->level('debug');
+    $self->plugin('yml_config');
 
 # Note that you should use a custom secret to make signed cookies really secure.
     $self->secret('dicty4ever');
-    $self->session->cookie_path('/curation');
-    $self->session->cookie_name('dictybasecuration');
-    $self->session->default_expiration(18000);
+    $self->sessions->cookie_path('/curation');
+    $self->sessions->cookie_name('dictybasecuration');
+    $self->sessions->default_expiration(18000);
 
     # Routes
     my $router = $self->routes;
@@ -107,27 +105,12 @@ sub startup {
 #    $bridge->route('reference/:id/gene/:gene_id/topics/:topic')->via('delete')
 #        ->to('reference#delete_topic');
 
-    # config file setup
-    $self->set_config;
-
     # set helper
     $self->utils( Curation::Utils->new() );
     $self->utils->app($self);
 
     # set dbh
     $self->set_dbh;
-}
-
-sub set_config {
-    my ($self) = @_;
-
-    my $folder = $self->home->rel_dir('conf');
-    return if !-e $folder;
-
-    my $file = catfile( $folder, $self->mode . '.yml' );
-
-    $self->config( YAML::LoadFile($file) );
-    $self->has_config(1);
 }
 
 sub set_dbh {
