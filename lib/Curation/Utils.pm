@@ -284,11 +284,11 @@ sub clean_cache {
     my $request = HTTP::Request->new('DELETE', $config->{cache}->{cleanup_url} . $id);
     my $responce = $agent->request($request);
     
-    if ($response->is_success) {
-         $logger->info("cleaned cache for $id");
+    if ($responce->is_success) {
+         $self->app->log->debug("cleaned cache for $id");
      }
      else {
-         $logger->info($response->status_line);
+         $self->app->log->debug($responce->status_line);
      }
 }
 
