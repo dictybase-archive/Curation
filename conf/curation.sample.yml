@@ -1,0 +1,191 @@
+organism:
+    discoideum: 
+        prefix : DDB
+        site_name : dictyBase
+
+signup : 1
+
+gene:
+    linkout : /gene/
+    gbrowse :
+        version : 2
+        tracks:
+            - Gene
+            - dictyBase
+            - Predictions
+            - Repredictions
+            - tRNA
+            - ncRNA
+            - ESTs
+            - RNAseq
+        padding : 1000
+        width : 300
+        link_url : http://localhost:3000/gbrowse2
+        img_url  : http://localhost:3000/gbrowse_img
+    
+    fasta:
+        padding : 1000
+        features:
+            - type   : mRNA
+              source : Sequencing Center
+              style  : FGCOLOR red
+              subfeature : exon
+            - type   : mRNA
+              source : geneID reprediction
+              style  : FGCOLOR blue
+              subfeature : exon
+            - type   : mRNA
+              source : dictyBase Curator
+              style  : BGCOLOR yellow
+              subfeature : exon
+            - type   : EST
+              style  : text-decoration: underline
+              subfeature : nucleotide_match
+            - type   : pseudogene
+              style  : BGCOLOR lightgrey
+              subfeature : pseudogenic_exon
+            - type   : RNAseq
+              style  : UPPERCASE
+              sourcedb : 
+                  dsn : dbi:mysql:host=192.168.4.53;database=seqfeature
+                  adaptor : DBI::mysql
+                  user : caboose
+                  pass : gmodmaster
+            - type   : pseudogene
+              style  : BGCOLOR lightgrey
+              subfeature : pseudogenic_exon
+    blink :
+        url : http://www.ncbi.nlm.nih.gov/sutils/blink.cgi?pid=
+    
+    blast :
+        features:
+            - type   : mRNA
+              source : dictyBase Curator
+              relationship : part_of   
+              default : 1
+              title : Curated model            
+            - type   : mRNA
+              source : Sequencing Center
+              relationship : part_of   
+              default : 1
+              title : Sequencing center model
+            - type   : mRNA
+              source : geneID reprediction
+              title: geneID reprediction
+        report_url : http://localhost:3000/blast/run
+        format_report_url : http://localhost:3000/blast/report
+        parameters :
+            - database : purpureum_protein.fas
+              name : D.purpureum
+              evalue : 0.1
+              filter : T
+              gapped : T
+              limit  : 5
+              matrix : BLOSUM62
+              program : blastp
+              wordsize : 3
+              default : 1
+            - database : fasciculatum_protein.fas
+              name: D.fasciculatum
+              evalue : 0.1
+              filter : T
+              gapped : T
+              limit  : 5
+              matrix : BLOSUM62
+              program : blastp
+              wordsize : 3
+            - database : pallidum_protein.fas
+              name : P.pallidum
+              evalue : 0.1
+              filter : T
+              gapped : T
+              limit  : 5
+              matrix : BLOSUM62
+              program : blastp  
+              wordsize : 3                  
+            - database : dicty_primary_protein
+              name: D.discoideum
+              evalue : 0.1
+              filter : T
+              gapped : T
+              limit  : 5
+              matrix : BLOSUM62
+              program : blastp
+    
+    curation:
+        features:
+            - type   : mRNA
+              source : Sequencing Center
+              relationship : part_of   
+              default : 1  
+              title : Sequencing center model
+            - type   : mRNA
+              source : geneID reprediction
+              title: geneID reprediction            
+        qualifiers:
+            - type : derived from
+              name : Derived from
+              values: 
+                  - gene prediction
+                  - gene sequence
+                  - curator inference
+              default: gene prediction
+            - type : supported by
+              name : Supported by
+              values :
+                  - ESTs
+                  - sequence similarity
+                  - genomic context
+                  - unpublished transcript sequence
+            - type : qualifier
+              name : Notes
+              values: 
+                  - Incomplete support
+                  - Conflicting evidence
+    
+    protein:
+        url : http://http://localhost:3000/tools/fasta
+        features:
+            - type   : mRNA
+              source : dictyBase Curator
+              default : 1
+              title : Curated model         
+              relationship : part_of   
+            - type   : mRNA
+              source : Sequencing Center
+              default : 1
+              title : Sequencing center model
+              relationship : part_of
+            - type   : mRNA
+              source : geneID reprediction
+              title :  geneID reprediction
+    
+
+reference: 
+    linkout : /publication/
+
+database:
+    dsn: dbi:Oracle:host=192.168.60.10;sid=dictybase
+    user: CGM_CHADO
+    pwd: CGM_CHADO
+    attr: 
+        LongReadLen: 10000
+        AutoCommit: 1
+    stats: stats.db
+
+cache:
+    cleanup_url: http://192.168.60.10/cache/gene/
+
+stats:
+    tables:
+        - table: stats
+          name: Weekly stats
+          columns:
+                - column: timecreated
+                - column: curated
+                  name: 'Curated gene models'
+                  sql: |
+                    SELECT COUNT(*) AS c FROM cgm_chado.v_verified_gene_features v
+                    INNER JOIN cgm_chado.organism o ON o.organism_id = v.organism_id
+                    WHERE o.common_name = 'dicty'
+
