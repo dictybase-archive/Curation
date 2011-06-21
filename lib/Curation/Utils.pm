@@ -4,7 +4,8 @@ use strict;
 use Chado::AutoDBI;
 use Data::Dumper;
 use dicty::DB::AutoDBI;
-
+use LWP::UserAgent;
+use HTTP::Request;
 use base 'Mojo::Base';
 
 use version; 
@@ -279,9 +280,10 @@ sub get_features {
 sub clean_cache {
     my ( $self, $id ) = @_;
     my $config = $self->app->config;
-#    $self->app->log->debug(
-#        $self->app->client->delete( $config->{cache}->{cleanup_url} . $id )
-#            ->res->body );
+    my $agent = LWP::UserAgent->new();
+    my $request = HTTP::Request->new('DELETE', $config->{cache}->{cleanup_url} . $id);
+    use Data::Dumper;
+    $self->app->log->debug(Dumper $agent->request($request));
 }
 
 1;
