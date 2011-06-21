@@ -282,8 +282,14 @@ sub clean_cache {
     my $config = $self->app->config;
     my $agent = LWP::UserAgent->new();
     my $request = HTTP::Request->new('DELETE', $config->{cache}->{cleanup_url} . $id);
-    use Data::Dumper;
-    $self->app->log->debug(Dumper $agent->request($request));
+    my $responce = $agent->request($request);
+    
+    if ($response->is_success) {
+         $logger->info("cleaned cache for $id");
+     }
+     else {
+         $logger->info($response->status_line);
+     }
 }
 
 1;
